@@ -120,8 +120,7 @@ RegisterNUICallback('checkDefense', function(data, cb)
 end)
 
 -- DEFENDER COUNTING ZONE
-RegisterNetEvent('eco_cargo:showCountingZone')
-AddEventHandler('eco_cargo:showCountingZone', function(coord)
+RegisterNetEvent('eco_cargo:showCountingZone', function(coord)
 
     Citizen.CreateThread(function()
 
@@ -254,8 +253,7 @@ RegisterNUICallback('missionDelete', function(data, cb)
     cb('ok')
 end)
 
-RegisterNetEvent('eco_cargo:trailerSignal')
-AddEventHandler('eco_cargo:trailerSignal', function(coords, plate, state)
+RegisterNetEvent('eco_cargo:trailerSignal', function(coords, plate, state)
 
     if not ECO.MONITOR.trailerSignal then
 
@@ -273,8 +271,7 @@ AddEventHandler('eco_cargo:trailerSignal', function(coords, plate, state)
     end
 end)
 
-RegisterNetEvent('eco_cargo:addAlarmBlip')
-AddEventHandler('eco_cargo:addAlarmBlip', function(player)
+RegisterNetEvent('eco_cargo:addAlarmBlip', function(player)
 
     local ped = GetPlayerPed(player)
     local blip = GetBlipFromEntity(ped)

@@ -273,22 +273,14 @@ function initCargo()
     -- DBQUERY
     if (ECO.CARGO.trailerPlate ~= plate or ECO.CARGO.monitorOwner ~= ECO.PLAYER.serverId) and ECO.MONITOR.queryStatus[trailer] ~= 0 then
 
-        local load
+        local ecoCargo = lib.callback.await('eco_cargo:cargoLoader', false, plate)
 
-        ESX.TriggerServerCallback('eco_cargo:cargoLoader', function(ecoCargo)
+        ECO.MONITOR.queryStatus[trailer] = 0
 
-            ECO.MONITOR.queryStatus[trailer] = 0
-
-            if ecoCargo then
-
-                ECO.MONITOR.queryStatus[trailer] = 1
-                ECO.CARGO = ecoCargo
-            end
-
-            load = true
-        end, plate)
-
-        while not load do Citizen.Wait(10) end
+        if ecoCargo then
+            ECO.MONITOR.queryStatus[trailer] = 1
+            ECO.CARGO = ecoCargo
+        end
     end
 
 

@@ -23,62 +23,50 @@ RegisterNUICallback('distanceCalc', function(data, cb)
     Citizen.CreateThread(function()
 
         -- ÚTVONALAK KIGYŰJTÉSE
-        local loadAllProducts
-        ESX.TriggerServerCallback('eco_cargo:getAllProducts', function(product)
+        local product = lib.callback.await('eco_cargo:getAllProducts', false)
 
-            if (product[1] ~= nil) then
+        if (product and product[1] ~= nil) then
 
-                for j = 1, #product do
+            for j = 1, #product do
 
-                    loading = json.decode(product[j].loading)
-                    destination = json.decode(product[j].destination)
-
-
-                    if loading and loading[1] and destination and destination[1] then
-
-                        for i = 1, #loading do
-
-                            id1 = loading[i]
+                loading = json.decode(product[j].loading)
+                destination = json.decode(product[j].destination)
 
 
-                            for z = 1, #destination do
+                if loading and loading[1] and destination and destination[1] then
 
-                                id2 = destination[z]
+                    for i = 1, #loading do
 
-                                k = k + 1
+                        id1 = loading[i]
 
-                                idC = concatId(id1, id2, '|', true)
-                                uniqueIdC[idC] = 1
-                            end
+
+                        for z = 1, #destination do
+
+                            id2 = destination[z]
+
+                            k = k + 1
+
+                            idC = concatId(id1, id2, '|', true)
+                            uniqueIdC[idC] = 1
                         end
-                    else
-
-                        print(product[j].id, 'üres étréket adott vissza!')
                     end
+                else
+
+                    print(product[j].id, 'üres étréket adott vissza!')
                 end
             end
-            loadAllProducts = true
-        end)
-
-        while not loadAllProducts do Citizen.Wait(100) end
-
+        end
 
         -- TÁVOLSÁGADATOK LEKÉRÉSE
-        local loadDistances
-        ESX.TriggerServerCallback('eco_cargo:getDistances', function(result)
+        local result = lib.callback.await('eco_cargo:getDistances', false)
 
-            if (result[1] ~= nil) then
+        if (result and result[1] ~= nil) then
 
-                for i = 1, #result do
+            for i = 1, #result do
 
-                    distances[result[i].id] = result[i]
-                end
+                distances[result[i].id] = result[i]
             end
-
-            loadDistances = true
-        end)
-
-        while not loadDistances do Citizen.Wait(100) end
+        end
 
 
         -- TÁVOLSÁGOK SZÁMÍTÁSA
@@ -175,8 +163,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
     cb('ok')
 end)
 
-RegisterNetEvent('eco_cargo:cargoDiagnostics')
-AddEventHandler('eco_cargo:cargoDiagnostics', function()
+RegisterNetEvent('eco_cargo:cargoDiagnostics', function()
 
     local loading, destination
     local id1, id2, idC
@@ -203,55 +190,36 @@ AddEventHandler('eco_cargo:cargoDiagnostics', function()
 
     Citizen.CreateThread(function()
 
-
         -- LOADING DATABASE: ZONE DATA
-        local loadAllZones
+        local zones = lib.callback.await('eco_cargo:getZones', false)
 
-        ESX.TriggerServerCallback('eco_cargo:getZones', function(zones)
+        if zones and zones[1] ~= nil then
 
-            if zones[1] ~= nil then
+            ECO.allZones = {}
 
-                ECO.allZones = {}
+            for _, v in pairs(zones) do
 
-                for _, v in pairs(zones) do
-
-                    ECO.allZones[v.id] = v
-                    ECO.allZones[v.id].actionpoint = coordsPharser(v.actionpoint)
-                    ECO.allZones[v.id].spawnpoint = coordsPharser(v.spawnpoint)
-                end
+                ECO.allZones[v.id] = v
+                ECO.allZones[v.id].actionpoint = coordsPharser(v.actionpoint)
+                ECO.allZones[v.id].spawnpoint = coordsPharser(v.spawnpoint)
             end
+        end
 
-            zones = nil
-            loadAllZones = true
-        end)
-
-        while not loadAllZones do Citizen.Wait(10) end
-
+        zones = nil
 
         ECO.DIAGNOSTICS.countActionPoints = assocCount(ECO.allZones)
 
-
         -- TÁVOLSÁGADATOK LEKÉRÉSE
-        local loadDistances
+        local distResult = lib.callback.await('eco_cargo:getDistances', false)
 
-        ESX.TriggerServerCallback('eco_cargo:getDistances', function(result)
-
-            if (result[1] ~= nil) then
-
-                for i = 1, #result do distances[result[i].id] = result[i] end
-            end
-
-            loadDistances = true
-        end)
-
-        while not loadDistances do Citizen.Wait(100) end
-
+        if (distResult and distResult[1] ~= nil) then
+            for i = 1, #distResult do distances[distResult[i].id] = distResult[i] end
+        end
 
         -- ÚTVONALAK KIGYŰJTÉSE
-        local loadAllProducts
-        ESX.TriggerServerCallback('eco_cargo:getAllProducts', function(product)
+        local product = lib.callback.await('eco_cargo:getAllProducts', false)
 
-            if (product[1] ~= nil) then
+        if (product and product[1] ~= nil) then
 
                 ECO.DIAGNOSTICS.countProducts = #product
 
@@ -333,12 +301,7 @@ AddEventHandler('eco_cargo:cargoDiagnostics', function()
                 -- LOCALE DIAGNOSTICS
                 localeDiagnostics(product)
             end
-
-            loadAllProducts = true
-        end, true)
-
-        while not loadAllProducts do Citizen.Wait(100) end
-
+        end
 
         for id, air in pairs(uniqueIdC) do
 
