@@ -18,10 +18,9 @@ function calculatePrice(propertyNames, km, product)
     local maxPrice = freightFee * 2
     local illegalPrice = value
 
-    -- Defender missions: freight fee is STILL distance-based, but with a multiplier
-    -- (NOT the full product value - that would be unrealistic)
+    -- Defender missions: HIGHEST PAY (4x multiplier on distance-based fee)
     if defender ~= '' then
-        freightFee = freightFee * 2.5  -- 2.5x multiplier for protected cargo
+        freightFee = freightFee * 4
         illegalPrice = value
     end
 

@@ -110,151 +110,162 @@ end
 
 --- Create a new company
 lib.callback.register('realrpg_cargo:company:create', function(source, data)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then return { success = false, message = 'Játékos nem található' } end
+    local success, result = pcall(function()
+        local xPlayer = ESX.GetPlayerFromId(source)
+        if not xPlayer then return { success = false, message = 'Játékos nem található' } end
 
-    local identifier = xPlayer.identifier
-    local name = data and data.name or nil
+        local identifier = xPlayer.identifier
+        local name = data and data.name or nil
 
-    -- Validations
-    if not name or #name < Config.company.nameMinLength or #name > Config.company.nameMaxLength then
-        return { success = false, message = 'A cégnév hossza ' .. Config.company.nameMinLength .. '-' .. Config.company.nameMaxLength .. ' karakter között kell legyen' }
+        -- Validations
+        if not name or #name < Config.company.nameMinLength or #name > Config.company.nameMaxLength then
+            return { success = false, message = 'A cégnév hossza ' .. Config.company.nameMinLength .. '-' .. Config.company.nameMaxLength .. ' karakter között kell legyen' }
+        end
+
+        -- Check if player already owns a company
+        local existing = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `owner_identifier` = ?', { identifier })
+        if existing and existing[1] then
+            return { success = false, message = 'Már van egy vállalkozásod!' }
+        end
+
+        -- Check if player is already employed somewhere
+        local employed = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
+        if employed and employed[1] then
+            return { success = false, message = 'Már dolgozol egy vállalkozásnál! Előbb lépj ki.' }
+        end
+
+        -- Check if name taken
+        local nameTaken = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `name` = ?', { name })
+        if nameTaken and nameTaken[1] then
+            return { success = false, message = 'Ez a cégnév már foglalt!' }
+        end
+
+        -- Check money (bank + cash combined)
+        local funds = getPlayerFunds(xPlayer)
+        if funds < Config.company.registrationFee then
+            return { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft (neked van: ' .. funds .. ' Ft)' }
+        end
+
+        -- Deduct money and create
+        local moneyRemoved = removePlayerMoney(xPlayer, Config.company.registrationFee)
+        if not moneyRemoved then
+            return { success = false, message = 'Pénz levonás sikertelen!' }
+        end
+
+        local insertId = MySQL.insert.await([[
+            INSERT INTO `realrpg_cargo_companies` (`name`, `owner_identifier`, `description`)
+            VALUES (?, ?, ?)
+        ]], { name, identifier, (data and data.description) or '' })
+
+        if not insertId then
+            addPlayerMoney(xPlayer, Config.company.registrationFee)
+            return { success = false, message = 'Adatbázis hiba! Pénz visszautalva.' }
+        end
+
+        -- Add owner as employee
+        MySQL.insert.await([[
+            INSERT INTO `realrpg_cargo_employees` (`company_id`, `identifier`, `role`, `salary`)
+            VALUES (?, ?, 'owner', 0)
+        ]], { insertId, identifier })
+
+        -- Transaction record
+        addTransaction(insertId, 'registration', -Config.company.registrationFee, 'Cégalapítási díj', identifier)
+
+        return { success = true, message = 'Vállalkozás sikeresen létrehozva!', companyId = insertId }
+    end)
+
+    if not success then
+        print('[RealRPG Cargo] Company create error: ' .. tostring(result))
+        return { success = false, message = 'Szerver hiba! Ellenőrizd hogy a realrpg_cargo_company.sql importálva van-e.' }
     end
 
-    -- Check if player already owns a company
-    local existing = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `owner_identifier` = ?', { identifier })
-    if existing and existing[1] then
-        return { success = false, message = 'Már van egy vállalkozásod!' }
-    end
-
-    -- Check if player is already employed somewhere
-    local employed = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
-    if employed and employed[1] then
-        return { success = false, message = 'Már dolgozol egy vállalkozásnál! Előbb lépj ki.' }
-    end
-
-    -- Check if name taken
-    local nameTaken = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `name` = ?', { name })
-    if nameTaken and nameTaken[1] then
-        return { success = false, message = 'Ez a cégnév már foglalt!' }
-    end
-
-    -- Check money (bank + cash combined)
-    local funds = getPlayerFunds(xPlayer)
-    if funds < Config.company.registrationFee then
-        return { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft (neked van: ' .. funds .. ' Ft)' }
-    end
-
-    -- Deduct money and create
-    local moneyRemoved = removePlayerMoney(xPlayer, Config.company.registrationFee)
-    if not moneyRemoved then
-        return { success = false, message = 'Pénz levonás sikertelen!' }
-    end
-
-    local insertId = MySQL.insert.await([[
-        INSERT INTO `realrpg_cargo_companies` (`name`, `owner_identifier`, `description`)
-        VALUES (?, ?, ?)
-    ]], { name, identifier, (data and data.description) or '' })
-
-    if not insertId then
-        -- Refund if DB insert failed
-        addPlayerMoney(xPlayer, Config.company.registrationFee)
-        return { success = false, message = 'Adatbázis hiba! Pénz visszautalva.' }
-    end
-
-    -- Add owner as employee
-    MySQL.insert.await([[
-        INSERT INTO `realrpg_cargo_employees` (`company_id`, `identifier`, `role`, `salary`)
-        VALUES (?, ?, 'owner', 0)
-    ]], { insertId, identifier })
-
-    -- Transaction record
-    addTransaction(insertId, 'registration', -Config.company.registrationFee, 'Cégalapítási díj', identifier)
-
-    -- Notify
-    TriggerClientEvent('realrpg_cargo:showNotification', source, {
-        type = 'success',
-        text = 'Vállalkozás "' .. name .. '" sikeresen létrehozva!'
-    })
-
-    return { success = true, message = 'Vállalkozás sikeresen létrehozva!', companyId = insertId }
+    return result
 end)
 
 --- Get player's company data (dashboard)
 lib.callback.register('realrpg_cargo:company:get', function(source)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then return nil end
+    local success, result = pcall(function()
+        local xPlayer = ESX.GetPlayerFromId(source)
+        if not xPlayer then return nil end
 
-    local identifier = xPlayer.identifier
+        local identifier = xPlayer.identifier
 
-    -- Find employee record
-    local employee = MySQL.query.await([[
-        SELECT e.*, c.*,
-            e.id as employee_id, e.role as my_role, e.salary as my_salary,
-            c.id as company_id, c.name as company_name
-        FROM `realrpg_cargo_employees` e
-        JOIN `realrpg_cargo_companies` c ON c.id = e.company_id
-        WHERE e.identifier = ?
-    ]], { identifier })
+        -- Find employee record
+        local employee = MySQL.query.await([[
+            SELECT e.*, c.*,
+                e.id as employee_id, e.role as my_role, e.salary as my_salary,
+                c.id as company_id, c.name as company_name
+            FROM `realrpg_cargo_employees` e
+            JOIN `realrpg_cargo_companies` c ON c.id = e.company_id
+            WHERE e.identifier = ?
+        ]], { identifier })
 
-    if not employee or not employee[1] then return nil end
+        if not employee or not employee[1] then return nil end
 
-    local company = employee[1]
-    local companyId = company.company_id
-    local level = getCompanyLevel(company)
+        local company = employee[1]
+        local companyId = company.company_id
+        local level = getCompanyLevel(company)
 
-    -- Get employees
-    local employees = MySQL.query.await([[
-        SELECT e.*, u.firstname, u.lastname
-        FROM `realrpg_cargo_employees` e
-        LEFT JOIN `users` u ON u.identifier = e.identifier
-        WHERE e.company_id = ?
-        ORDER BY FIELD(e.role, 'owner', 'manager', 'dispatcher', 'driver')
-    ]], { companyId })
+        -- Get employees
+        local employees = MySQL.query.await([[
+            SELECT e.*, u.firstname, u.lastname
+            FROM `realrpg_cargo_employees` e
+            LEFT JOIN `users` u ON u.identifier = e.identifier
+            WHERE e.company_id = ?
+            ORDER BY FIELD(e.role, 'owner', 'manager', 'dispatcher', 'driver')
+        ]], { companyId })
 
-    -- Get vehicles
-    local vehicles = MySQL.query.await('SELECT * FROM `realrpg_cargo_vehicles` WHERE `company_id` = ?', { companyId })
+        -- Get vehicles
+        local vehicles = MySQL.query.await('SELECT * FROM `realrpg_cargo_vehicles` WHERE `company_id` = ?', { companyId })
 
-    -- Get active contracts
-    local contracts = MySQL.query.await([[
-        SELECT * FROM `realrpg_cargo_contracts`
-        WHERE `company_id` = ? AND `status` IN ('available', 'accepted', 'in_progress')
-        ORDER BY `created_at` DESC
-    ]], { companyId })
+        -- Get active contracts
+        local contracts = MySQL.query.await([[
+            SELECT * FROM `realrpg_cargo_contracts`
+            WHERE `company_id` = ? AND `status` IN ('available', 'accepted', 'in_progress')
+            ORDER BY `created_at` DESC
+        ]], { companyId })
 
-    -- Recent transactions
-    local transactions = MySQL.query.await([[
-        SELECT * FROM `realrpg_cargo_transactions`
-        WHERE `company_id` = ?
-        ORDER BY `created_at` DESC LIMIT 20
-    ]], { companyId })
+        -- Recent transactions
+        local transactions = MySQL.query.await([[
+            SELECT * FROM `realrpg_cargo_transactions`
+            WHERE `company_id` = ?
+            ORDER BY `created_at` DESC LIMIT 20
+        ]], { companyId })
 
-    return {
-        company = {
-            id = companyId,
-            name = company.company_name,
-            balance = company.balance,
-            reputation = company.reputation,
-            level = level,
-            totalDeliveries = company.total_deliveries,
-            totalDistance = company.total_distance,
-            totalRevenue = company.total_revenue,
-            taxPaid = company.tax_paid,
-            description = company.description,
-            foundedAt = company.founded_at,
-        },
-        myRole = company.my_role,
-        mySalary = company.my_salary,
-        employees = employees or {},
-        vehicles = vehicles or {},
-        contracts = contracts or {},
-        transactions = transactions or {},
-        config = {
-            roles = Config.company.roles,
-            vehiclesAvailable = Config.company.vehicles.available,
-            levels = Config.company.levels,
+        return {
+            company = {
+                id = companyId,
+                name = company.company_name,
+                balance = company.balance,
+                reputation = company.reputation,
+                level = level,
+                totalDeliveries = company.total_deliveries,
+                totalDistance = company.total_distance,
+                totalRevenue = company.total_revenue,
+                taxPaid = company.tax_paid,
+                description = company.description,
+                foundedAt = company.founded_at,
+            },
+            myRole = company.my_role,
+            mySalary = company.my_salary,
+            employees = employees or {},
+            vehicles = vehicles or {},
+            contracts = contracts or {},
+            transactions = transactions or {},
+            config = {
+                roles = Config.company.roles,
+                vehiclesAvailable = Config.company.vehicles.available,
+                levels = Config.company.levels,
+            }
         }
-    }
+    end)
+
+    if not success then
+        print('[RealRPG Cargo] Company get error: ' .. tostring(result))
+        return nil
+    end
+
+    return result
 end)
 
 --- Delete / disband company

@@ -560,16 +560,18 @@ COMMIT;
 
 -- ============================================================
 -- CURRENCY FIX: Set realistic Ft values
--- Normal products: caution 50.000 - 150.000 Ft
--- Valuable products: caution 200.000 - 500.000 Ft
--- Defender/mission products: caution 500.000 - 1.500.000 Ft
--- Value = illegal resale value of the cargo itself
+-- Caution: 30.000 Ft for ALL normal products (affordable after 1 delivery)
+-- Defender products: higher caution but still achievable
 -- ============================================================
 
--- Normal products (caution_money was 1000 USD)
-UPDATE `realrpg_cargo_products` SET `caution_money` = 75000, `value` = `value` * 50 WHERE `defender` = '' AND `caution_money` = 1000;
-UPDATE `realrpg_cargo_products` SET `caution_money` = 100000, `value` = `value` * 50 WHERE `defender` = '' AND `caution_money` = 1010;
+-- ALL normal products: low caution so players can start immediately
+UPDATE `realrpg_cargo_products` SET `caution_money` = 30000 WHERE `defender` = '';
 
--- Defender/mission products (high value, need grind to afford caution)
-UPDATE `realrpg_cargo_products` SET `caution_money` = 750000, `value` = 3000000 WHERE `defender` != '' AND `caution_money` = 30000;
-UPDATE `realrpg_cargo_products` SET `caution_money` = 1200000, `value` = 5000000 WHERE `defender` != '' AND `caution_money` = 50000;
+-- Defender/mission products: higher caution (requires grinding)
+UPDATE `realrpg_cargo_products` SET `caution_money` = 250000 WHERE `defender` != '';
+
+-- Product values (illegal resale) - reasonable Ft amounts
+UPDATE `realrpg_cargo_products` SET `value` = 150000 WHERE `defender` = '' AND `value` < 5000;
+UPDATE `realrpg_cargo_products` SET `value` = 350000 WHERE `defender` = '' AND `value` >= 5000 AND `value` < 10000;
+UPDATE `realrpg_cargo_products` SET `value` = 750000 WHERE `defender` = '' AND `value` >= 10000;
+UPDATE `realrpg_cargo_products` SET `value` = 2000000 WHERE `defender` != '';
