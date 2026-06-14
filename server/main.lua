@@ -15,11 +15,11 @@ ECO.loadingZonesIds = {}
 -- CALLBACKS (using lib.callback from ox_lib)
 -- ============================================================
 
-lib.callback.register('eco_cargo:getMission', function(source)
+lib.callback.register('realrpg_cargo:getMission', function(source)
     return ECO.MISSION
 end)
 
-lib.callback.register('eco_cargo:getPlayers', function(source)
+lib.callback.register('realrpg_cargo:getPlayers', function(source)
 
     -- PLAYER MONITORING
     if next(ECO.PLAYERS) == nil then
@@ -40,7 +40,7 @@ lib.callback.register('eco_cargo:getPlayers', function(source)
     return ECO.PLAYERS
 end)
 
-lib.callback.register('eco_cargo:getPlayer', function(source)
+lib.callback.register('realrpg_cargo:getPlayer', function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
 
@@ -78,17 +78,17 @@ lib.callback.register('eco_cargo:getPlayer', function(source)
     return userData
 end)
 
-lib.callback.register('eco_cargo:getZones', function(source)
+lib.callback.register('realrpg_cargo:getZones', function(source)
 
-    local zones = MySQL.query.await('SELECT * FROM eco_cargo_zones', {})
+    local zones = MySQL.query.await('SELECT * FROM realrpg_cargo_zones', {})
     return zones
 end)
 
-lib.callback.register('eco_cargo:getProducts', function(source)
+lib.callback.register('realrpg_cargo:getProducts', function(source)
 
     if next(ECO.PRODUCTS) == nil then
 
-        local sql = 'SELECT * FROM `eco_cargo_products` WHERE `loading` NOT IN("[]", "") AND `destination` NOT IN("[]", "")'
+        local sql = 'SELECT * FROM `realrpg_cargo_products` WHERE `loading` NOT IN("[]", "") AND `destination` NOT IN("[]", "")'
         local result = MySQL.query.await(sql, {})
 
         if result and result[1] then
@@ -122,19 +122,19 @@ lib.callback.register('eco_cargo:getProducts', function(source)
     return ECO.PRODUCTS, ECO.loadingZonesIds
 end)
 
-lib.callback.register('eco_cargo:getAllProducts', function(source)
+lib.callback.register('realrpg_cargo:getAllProducts', function(source)
 
-    local result = MySQL.query.await('SELECT * FROM `eco_cargo_products`', {})
+    local result = MySQL.query.await('SELECT * FROM `realrpg_cargo_products`', {})
     return result
 end)
 
-lib.callback.register('eco_cargo:getDistances', function(source)
+lib.callback.register('realrpg_cargo:getDistances', function(source)
 
-    local distances = MySQL.query.await('SELECT * FROM `eco_cargo_distances`', {})
+    local distances = MySQL.query.await('SELECT * FROM `realrpg_cargo_distances`', {})
     return distances
 end)
 
-lib.callback.register('eco_cargo:cargoLoader', function(source, plate, existsCheck)
+lib.callback.register('realrpg_cargo:cargoLoader', function(source, plate, existsCheck)
 
     if existsCheck then
         -- Reserved for future use (trailer respawning logic)
@@ -144,13 +144,13 @@ lib.callback.register('eco_cargo:cargoLoader', function(source, plate, existsChe
     end
 end)
 
-lib.callback.register('eco_cargo:getDataByPlate', function(source, plate)
+lib.callback.register('realrpg_cargo:getDataByPlate', function(source, plate)
 
     plate = safePlate(plate)
     return ECO.CARGO[plate]
 end)
 
-lib.callback.register('eco_cargo:getAllStatistics', function(source, data)
+lib.callback.register('realrpg_cargo:getAllStatistics', function(source, data)
 
     -- SECURITY: Whitelist allowed orderBy columns to prevent SQL injection
     local allowedOrderBy = {
@@ -173,15 +173,15 @@ lib.callback.register('eco_cargo:getAllStatistics', function(source, data)
     if not data.dir or not allowedDir[data.dir] then data.dir = 'DESC' end
 
     local sql = [[
-        SELECT `eco_cargo_stats`.*,
-        `eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery` as `all_started`,
-        `eco_cargo_stats`.`done_mission` + `eco_cargo_stats`.`done_delivery` as `all_done`,
-        `eco_cargo_stats`.`stolen_mission` + `eco_cargo_stats`.`stolen_delivery` as `all_stolen`,
-        `eco_cargo_stats`.`goods_quality` / (`eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery`) as `quality_rate`,
-        (`eco_cargo_stats`.`done_mission` + `eco_cargo_stats`.`done_delivery`) / (`eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery`) * 100 as `success_rate`,
+        SELECT `realrpg_cargo_stats`.*,
+        `realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery` as `all_started`,
+        `realrpg_cargo_stats`.`done_mission` + `realrpg_cargo_stats`.`done_delivery` as `all_done`,
+        `realrpg_cargo_stats`.`stolen_mission` + `realrpg_cargo_stats`.`stolen_delivery` as `all_stolen`,
+        `realrpg_cargo_stats`.`goods_quality` / (`realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery`) as `quality_rate`,
+        (`realrpg_cargo_stats`.`done_mission` + `realrpg_cargo_stats`.`done_delivery`) / (`realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery`) * 100 as `success_rate`,
         `users`.`firstname`,
         `users`.`lastname`
-        FROM `eco_cargo_stats`
+        FROM `realrpg_cargo_stats`
         LEFT JOIN `users`
         USING (`identifier`)
         ORDER BY `]] .. data.orderBy .. [[` ]] .. data.dir .. [[
@@ -192,7 +192,7 @@ lib.callback.register('eco_cargo:getAllStatistics', function(source, data)
     return result
 end)
 
-lib.callback.register('eco_cargo:getAchievements', function(source)
+lib.callback.register('realrpg_cargo:getAchievements', function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return {} end
@@ -200,35 +200,35 @@ lib.callback.register('eco_cargo:getAchievements', function(source)
     return ECO.Achievements.getAll(xPlayer.identifier)
 end)
 
-lib.callback.register('eco_cargo:getStatistics', function(source)
+lib.callback.register('realrpg_cargo:getStatistics', function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
     local identifier = xPlayer.identifier
 
     local sql = [[
-        SELECT `eco_cargo_stats`.*,
-        `eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery` as `all_started`,
-        `eco_cargo_stats`.`done_mission` + `eco_cargo_stats`.`done_delivery` as `all_done`,
-        `eco_cargo_stats`.`stolen_mission` + `eco_cargo_stats`.`stolen_delivery` as `all_stolen`,
-        `eco_cargo_stats`.`goods_quality` / (`eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery`) as `quality_rate`,
-        (`eco_cargo_stats`.`done_mission` + `eco_cargo_stats`.`done_delivery`) / (`eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery`) * 100 as `success_rate`,
+        SELECT `realrpg_cargo_stats`.*,
+        `realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery` as `all_started`,
+        `realrpg_cargo_stats`.`done_mission` + `realrpg_cargo_stats`.`done_delivery` as `all_done`,
+        `realrpg_cargo_stats`.`stolen_mission` + `realrpg_cargo_stats`.`stolen_delivery` as `all_stolen`,
+        `realrpg_cargo_stats`.`goods_quality` / (`realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery`) as `quality_rate`,
+        (`realrpg_cargo_stats`.`done_mission` + `realrpg_cargo_stats`.`done_delivery`) / (`realrpg_cargo_stats`.`started_mission` + `realrpg_cargo_stats`.`started_delivery`) * 100 as `success_rate`,
         `users`.`firstname`,
         `users`.`lastname`
-        FROM `eco_cargo_stats`
+        FROM `realrpg_cargo_stats`
         LEFT JOIN `users`
         USING (`identifier`)
-        WHERE `eco_cargo_stats`.`identifier` = @identifier
+        WHERE `realrpg_cargo_stats`.`identifier` = @identifier
     ]]
 
     local result = MySQL.query.await(sql, { ['@identifier'] = identifier })
     return result
 end)
 
-lib.callback.register('eco_cargo:getServerTime', function(source)
+lib.callback.register('realrpg_cargo:getServerTime', function(source)
     return os.time()
 end)
 
-lib.callback.register('eco_cargo:getRemainingTime', function(source, data)
+lib.callback.register('realrpg_cargo:getRemainingTime', function(source, data)
 
     local product = ECO.PRODUCTS[data.productId]
     local lastStartTime = product.loading[data.loadingZoneId]
@@ -242,24 +242,24 @@ end)
 
 AddEventHandler('esx:setJob', function(playerId, job)
     ECO.PLAYERS[playerId] = job.name
-    TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
+    TriggerClientEvent('realrpg_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
 AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
     ECO.PLAYERS[playerId] = xPlayer.job.name
-    TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
+    TriggerClientEvent('realrpg_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
 AddEventHandler('esx:playerDropped', function(playerId)
     ECO.PLAYERS[playerId] = nil
-    TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
+    TriggerClientEvent('realrpg_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
 -- ============================================================
 -- CARGO EVENTS
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
+RegisterNetEvent('realrpg_cargo:cargoRegister', function(ecoCargo)
 
     local _source = source
     local plate = safePlate(ecoCargo.trailerPlate)
@@ -299,8 +299,8 @@ RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
         ECO.MISSION[missionId].trailerPlate = plate
         ECO.MISSION[missionId].destinationZoneId = ecoCargo.destinationZoneId
 
-        TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
-        TriggerClientEvent('eco_cargo:missionNotification', -1, { otherText = _('mission_start_alert') })
+        TriggerClientEvent('realrpg_cargo:missionUpdate', -1, ECO.MISSION)
+        TriggerClientEvent('realrpg_cargo:missionNotification', -1, { otherText = _('mission_start_alert') })
     end
 
     if ecoCargo.params.damageRoll < 10 or ecoCargo.params.collisionSensitivity < 100 then
@@ -309,7 +309,7 @@ RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
 
     -- STAT RECORD
     local sql = [[
-    INSERT INTO `eco_cargo_stats`
+    INSERT INTO `realrpg_cargo_stats`
     (
         `identifier`,
         `started_delivery`,
@@ -337,7 +337,7 @@ RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
         ['@vulnerable'] = isVulnerable and 1 or 0,
     })
 
-    TriggerClientEvent('eco_cargo:productUpdate', -1, {
+    TriggerClientEvent('realrpg_cargo:productUpdate', -1, {
         productId = ecoCargo.productId,
         loadingZoneId = ecoCargo.loadingZoneId,
         time = osTime
@@ -353,7 +353,7 @@ RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
     })
 end)
 
-RegisterNetEvent('eco_cargo:cargoUpdate', function(ecoCargo)
+RegisterNetEvent('realrpg_cargo:cargoUpdate', function(ecoCargo)
 
     local plate = safePlate(ecoCargo.trailerPlate)
 
@@ -362,7 +362,7 @@ RegisterNetEvent('eco_cargo:cargoUpdate', function(ecoCargo)
     table.refresh(ECO.CARGO[plate], ecoCargo)
 end)
 
-RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
+RegisterNetEvent('realrpg_cargo:deleteCargo', function(plate, state)
 
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
@@ -377,7 +377,7 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
     local ecoCargo = ECO.CARGO[plate]
     local stolen = not (ecoCargo.owner.identifier == identifier)
 
-    TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, plate, false)
+    TriggerClientEvent('realrpg_cargo:trailerSignal', -1, {}, plate, false)
 
     -- DELETE MISSION DATA
     local missionId = concatId(ecoCargo.loadingZoneId, ecoCargo.productId, '_')
@@ -386,7 +386,7 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
 
         isMission = true
         defenders = ECO.MISSION[missionId].joined
-        TriggerEvent('eco_cargo:missionUpdate', { missionId = missionId }, 'delete')
+        TriggerEvent('realrpg_cargo:missionUpdate', { missionId = missionId }, 'delete')
     end
 
     local params = ecoCargo.params
@@ -405,7 +405,7 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
     end
 
     local sql = [[
-        INSERT INTO `eco_cargo_stats`
+        INSERT INTO `realrpg_cargo_stats`
         (
             `identifier`,
             `distance`,
@@ -458,7 +458,7 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
     if next(defenders) ~= nil and not stolen and state ~= 'DESTROYED' then
 
         local defenderSql = [[
-            INSERT INTO `eco_cargo_stats`
+            INSERT INTO `realrpg_cargo_stats`
             (`identifier`, `defender`, `last_activity`)
             VALUES (@identifier, @defender, current_timestamp())
             ON DUPLICATE KEY UPDATE
@@ -493,13 +493,13 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
     end
 end)
 
-RegisterNetEvent('eco_cargo:changeMonitorOwner', function(oldOwner, plate)
+RegisterNetEvent('realrpg_cargo:changeMonitorOwner', function(oldOwner, plate)
 
     local _source = source
 
     if ECO.CARGO[plate] then
         ECO.CARGO[plate].monitorOwner = _source
-        TriggerClientEvent('eco_cargo:changeMonitorOwner', oldOwner, plate, _source)
+        TriggerClientEvent('realrpg_cargo:changeMonitorOwner', oldOwner, plate, _source)
     end
 end)
 
@@ -507,7 +507,7 @@ end)
 -- SECURE PAYMENT (server-side calculation)
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
+RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
 
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
@@ -554,7 +554,7 @@ RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
             xPlayer.addMoney(amount)
         end
 
-        TriggerClientEvent('eco_cargo:showNotification', _source, {
+        TriggerClientEvent('realrpg_cargo:showNotification', _source, {
             type = 'money',
             text = _('add_money', amount, _(moneyType))
         })
@@ -568,7 +568,7 @@ RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
             end
         end)
 
-        TriggerClientEvent('eco_cargo:missionNotification', -1, {
+        TriggerClientEvent('realrpg_cargo:missionNotification', -1, {
             defender = product.defender,
             type = 'money',
             text = _('add_society_money', _(product.defender), societyAmount)
@@ -576,7 +576,7 @@ RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
     end
 
     -- Return payment data to client for report display
-    TriggerClientEvent('eco_cargo:paymentProcessed', _source, paymentData)
+    TriggerClientEvent('realrpg_cargo:paymentProcessed', _source, paymentData)
 
     -- DISCORD: Successful delivery notification
     ECO.Discord.cargoDelivered({
@@ -590,18 +590,28 @@ RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
 
     -- ACHIEVEMENTS: Check after successful delivery
     ECO.Achievements.check(identifier, _source)
+
+    -- COMPANY: Process company delivery payment
+    if ProcessCompanyDelivery then
+        ProcessCompanyDelivery(identifier, {
+            km = ecoCargo.km,
+            quality = ecoCargo.quality,
+            freightFee = priceData.freightFee,
+            productId = ecoCargo.productId
+        })
+    end
 end)
 
 -- DEPRECATED: Legacy event handlers (kept for backward compatibility warnings)
-RegisterNetEvent('eco_cargo:addMoney', function()
-    print('[ECO CARGO WARNING] eco_cargo:addMoney called directly - this is deprecated and insecure!')
+RegisterNetEvent('realrpg_cargo:addMoney', function()
+    print('[ECO CARGO WARNING] realrpg_cargo:addMoney called directly - this is deprecated and insecure!')
 end)
 
-RegisterNetEvent('eco_cargo:societyAddMoney', function()
-    print('[ECO CARGO WARNING] eco_cargo:societyAddMoney called directly - this is deprecated!')
+RegisterNetEvent('realrpg_cargo:societyAddMoney', function()
+    print('[ECO CARGO WARNING] realrpg_cargo:societyAddMoney called directly - this is deprecated!')
 end)
 
-RegisterNetEvent('eco_cargo:removeMoney', function(amount)
+RegisterNetEvent('realrpg_cargo:removeMoney', function(amount)
     local _source = source
     removeMoney(_source, amount)
 end)
@@ -610,7 +620,7 @@ end)
 -- MISSION EVENTS
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:missionUpdate', function(data, subject)
+RegisterNetEvent('realrpg_cargo:missionUpdate', function(data, subject)
 
     local currentMission = ECO.MISSION[data.missionId]
 
@@ -627,7 +637,7 @@ RegisterNetEvent('eco_cargo:missionUpdate', function(data, subject)
 
         data.type = 'warning'
         data.text = _('defender_left', data.player.characterName, data.player.job.grade_label)
-        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+        TriggerClientEvent('realrpg_cargo:missionNotification', -1, data)
 
     elseif subject == 'join' then
 
@@ -635,7 +645,7 @@ RegisterNetEvent('eco_cargo:missionUpdate', function(data, subject)
 
         data.type = 'information'
         data.text = _('defender_joined', data.player.characterName, data.player.job.grade_label)
-        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+        TriggerClientEvent('realrpg_cargo:missionNotification', -1, data)
 
     elseif subject == 'delete' then
 
@@ -644,16 +654,16 @@ RegisterNetEvent('eco_cargo:missionUpdate', function(data, subject)
         data.type = 'warning'
         data.text = _('mission_is_over')
 
-        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
-        TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, currentMission.plate, false)
+        TriggerClientEvent('realrpg_cargo:missionNotification', -1, data)
+        TriggerClientEvent('realrpg_cargo:trailerSignal', -1, {}, currentMission.plate, false)
 
         ECO.MISSION[data.missionId] = nil
     end
 
-    TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
+    TriggerClientEvent('realrpg_cargo:missionUpdate', -1, ECO.MISSION)
 end)
 
-RegisterNetEvent('eco_cargo:missionRegister', function(data)
+RegisterNetEvent('realrpg_cargo:missionRegister', function(data)
 
     local missionId = data.missionId
 
@@ -666,7 +676,7 @@ RegisterNetEvent('eco_cargo:missionRegister', function(data)
             defender = data.defender
         }
 
-        TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
+        TriggerClientEvent('realrpg_cargo:missionUpdate', -1, ECO.MISSION)
     end
 
     -- BROADCAST
@@ -675,7 +685,7 @@ RegisterNetEvent('eco_cargo:missionRegister', function(data)
     data.text = _('request_protection', data.owner.characterName)
     data.otherText = _('mission_alert')
 
-    TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+    TriggerClientEvent('realrpg_cargo:missionNotification', -1, data)
 
     -- DISCORD: Mission registered notification
     ECO.Discord.missionRegistered({
@@ -687,32 +697,32 @@ RegisterNetEvent('eco_cargo:missionRegister', function(data)
     })
 end)
 
-RegisterNetEvent('eco_cargo:showCountingZone', function(coord)
-    TriggerClientEvent('eco_cargo:showCountingZone', -1, coord)
+RegisterNetEvent('realrpg_cargo:showCountingZone', function(coord)
+    TriggerClientEvent('realrpg_cargo:showCountingZone', -1, coord)
 end)
 
-RegisterNetEvent('eco_cargo:trailerSignal', function(coord, plate, state)
-    TriggerClientEvent('eco_cargo:trailerSignal', -1, coord, plate, state)
+RegisterNetEvent('realrpg_cargo:trailerSignal', function(coord, plate, state)
+    TriggerClientEvent('realrpg_cargo:trailerSignal', -1, coord, plate, state)
 end)
 
 -- ============================================================
 -- DISTANCE MANAGEMENT
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:updateDistance', function(data)
+RegisterNetEvent('realrpg_cargo:updateDistance', function(data)
 
     for k, v in pairs(data) do
         MySQL.update(
-            "INSERT INTO `eco_cargo_distances` (`id`, `air`, `route`) VALUES (@id, @air, @route) ON DUPLICATE KEY UPDATE `air` = @air, `route` = @route",
+            "INSERT INTO `realrpg_cargo_distances` (`id`, `air`, `route`) VALUES (@id, @air, @route) ON DUPLICATE KEY UPDATE `air` = @air, `route` = @route",
             { ['@id'] = k, ['@air'] = v.air, ['@route'] = v.route }
         )
     end
 end)
 
-RegisterNetEvent('eco_cargo:deleteDistance', function(data)
+RegisterNetEvent('realrpg_cargo:deleteDistance', function(data)
 
     if type(data) == 'table' and next(data) then
-        MySQL.update("DELETE FROM `eco_cargo_distances` WHERE `id` IN (" .. table.concat(data, ', ') .. ")", {})
+        MySQL.update("DELETE FROM `realrpg_cargo_distances` WHERE `id` IN (" .. table.concat(data, ', ') .. ")", {})
     end
 end)
 
@@ -728,7 +738,7 @@ function removeMoney(_source, amount)
 
     xPlayer.removeMoney(amount)
 
-    TriggerClientEvent('eco_cargo:showNotification', _source, {
+    TriggerClientEvent('realrpg_cargo:showNotification', _source, {
         type = 'money',
         text = _('remove_money', amount)
     })
@@ -747,7 +757,7 @@ RegisterCommand("cargodiag", function(source)
     local group = xPlayer.getGroup()
 
     if group == 'admin' or group == 'superadmin' then
-        TriggerClientEvent('eco_cargo:cargoDiagnostics', source)
+        TriggerClientEvent('realrpg_cargo:cargoDiagnostics', source)
         TriggerClientEvent('esx:showNotification', source, '~r~ECO CARGO:~s~ Diagnosztika')
     else
         TriggerClientEvent('chat:addMessage', source, { args = { "^1SYSTEM", "Ehhez nincs jogosultságod!" } })

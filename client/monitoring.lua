@@ -111,7 +111,7 @@ Citizen.CreateThread(function()
         Citizen.Wait(20000)
 
         if ECO.MONITOR.ServerSaveRequest and ECO.CARGO.trailer then
-            TriggerServerEvent('eco_cargo:cargoUpdate', ECO.CARGO)
+            TriggerServerEvent('realrpg_cargo:cargoUpdate', ECO.CARGO)
             ECO.MONITOR.ServerSaveRequest = false
         end
     end
@@ -157,7 +157,7 @@ Citizen.CreateThread(function()
         Citizen.Wait(Config.missionTrailerSignalInterval * 1000)
 
         if ECO.MONITOR.towing and ECO.CARGO.params and ECO.CARGO.params.marked_on_the_map == 1 then
-            TriggerServerEvent('eco_cargo:trailerSignal', ECO.CARGO.coords, ECO.MONITOR.trailerPlate, true)
+            TriggerServerEvent('realrpg_cargo:trailerSignal', ECO.CARGO.coords, ECO.MONITOR.trailerPlate, true)
         end
     end
 end)
@@ -167,17 +167,17 @@ end)
 -- ============================================================
 
 -- PLAYER MONITORING
-RegisterNetEvent('eco_cargo:updatePlayers', function(players)
+RegisterNetEvent('realrpg_cargo:updatePlayers', function(players)
     ECO.PLAYERS = players
 end)
 
 -- MISSION MONITORING
-RegisterNetEvent('eco_cargo:missionUpdate', function(mission)
+RegisterNetEvent('realrpg_cargo:missionUpdate', function(mission)
     ECO.MISSION = mission
 end)
 
 -- PRODUCT COOLDOWN MONITORING
-RegisterNetEvent('eco_cargo:productUpdate', function(data)
+RegisterNetEvent('realrpg_cargo:productUpdate', function(data)
     if ECO.allProducts[data.productId] then
         ECO.allProducts[data.productId].loading[data.loadingZoneId] = data.time
     end

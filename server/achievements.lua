@@ -19,7 +19,7 @@ function ECO.Achievements.check(identifier, source)
         `started_mission` + `started_delivery` as `all_started`,
         `done_mission` + `done_delivery` as `all_done`,
         `stolen_mission` + `stolen_delivery` as `all_stolen`
-        FROM `eco_cargo_stats`
+        FROM `realrpg_cargo_stats`
         WHERE `identifier` = @identifier
     ]], { ['@identifier'] = identifier })
 
@@ -60,7 +60,7 @@ function ECO.Achievements.check(identifier, source)
         local achievementJson = json.encode(currentAchievements)
 
         MySQL.update([[
-            UPDATE `eco_cargo_stats`
+            UPDATE `realrpg_cargo_stats`
             SET `achievement` = @achievement
             WHERE `identifier` = @identifier
         ]], {
@@ -70,7 +70,7 @@ function ECO.Achievements.check(identifier, source)
 
         -- Notify player of each new achievement
         for _, achievement in ipairs(newAchievements) do
-            TriggerClientEvent('eco_cargo:achievementUnlocked', source, {
+            TriggerClientEvent('realrpg_cargo:achievementUnlocked', source, {
                 id = achievement.id,
                 name = achievement.name,
                 description = achievement.description,
@@ -103,7 +103,7 @@ end
 ---@return table {earned: table, available: table}
 function ECO.Achievements.getAll(identifier)
     local stats = MySQL.query.await([[
-        SELECT `achievement` FROM `eco_cargo_stats`
+        SELECT `achievement` FROM `realrpg_cargo_stats`
         WHERE `identifier` = @identifier
     ]], { ['@identifier'] = identifier })
 

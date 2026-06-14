@@ -25,20 +25,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `eco_cargo_distances`
+-- Tábla szerkezet ehhez a táblához `realrpg_cargo_distances`
 --
 
-CREATE TABLE `eco_cargo_distances` (
+CREATE TABLE `realrpg_cargo_distances` (
   `id` bigint(20) NOT NULL,
   `air` int(11) NOT NULL,
   `route` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- A tábla adatainak kiíratása `eco_cargo_distances`
+-- A tábla adatainak kiíratása `realrpg_cargo_distances`
 --
 
-INSERT INTO `eco_cargo_distances` (`id`, `air`, `route`) VALUES
+INSERT INTO `realrpg_cargo_distances` (`id`, `air`, `route`) VALUES
 (110, 1210, 1725),
 (116, 1531, 1989),
 (120, 1945, 2271),
@@ -261,10 +261,10 @@ INSERT INTO `eco_cargo_distances` (`id`, `air`, `route`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `eco_cargo_products`
+-- Tábla szerkezet ehhez a táblához `realrpg_cargo_products`
 --
 
-CREATE TABLE `eco_cargo_products` (
+CREATE TABLE `realrpg_cargo_products` (
   `id` bigint(20) NOT NULL,
   `name` varchar(100) DEFAULT '',
   `value` int(11) NOT NULL DEFAULT 1000,
@@ -281,10 +281,10 @@ CREATE TABLE `eco_cargo_products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- A tábla adatainak kiíratása `eco_cargo_products`
+-- A tábla adatainak kiíratása `realrpg_cargo_products`
 --
 
-INSERT INTO `eco_cargo_products` (`id`, `name`, `value`, `caution_money`, `defender`, `required_defenders`, `trailer`, `trailer_properties`, `properties`, `loading`, `destination`, `reproduction_time`, `rank`) VALUES
+INSERT INTO `realrpg_cargo_products` (`id`, `name`, `value`, `caution_money`, `defender`, `required_defenders`, `trailer`, `trailer_properties`, `properties`, `loading`, `destination`, `reproduction_time`, `rank`) VALUES
 (1, 'oil', 5100, 1000, '', 0, 'tanker2', '', '[\"flammable\",\"toxic\",\"heavy\",\"pollutant\"]', '[19,20]', '[40]', 0, 0),
 (2, 'petrol', 6500, 1000, '', 0, 'tanker', '', '[\"explosive\",\"flammable\",\"toxic\",\"heavy\",\"pollutant\"]', '[40]', '[31,37,80]', 0, 0),
 (3, 'acid', 3600, 1000, '', 0, 'tanker2', '', '[\"toxic\",\"corrodent\",\"heavy\",\"pollutant\"]', '[41]', '[31]', 0, 0),
@@ -383,10 +383,10 @@ INSERT INTO `eco_cargo_products` (`id`, `name`, `value`, `caution_money`, `defen
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `eco_cargo_stats`
+-- Tábla szerkezet ehhez a táblához `realrpg_cargo_stats`
 --
 
-CREATE TABLE `eco_cargo_stats` (
+CREATE TABLE `realrpg_cargo_stats` (
   `identifier` varchar(255) NOT NULL DEFAULT '',
   `distance` float NOT NULL DEFAULT 0,
   `goods_quality` int(11) NOT NULL DEFAULT 0,
@@ -409,10 +409,10 @@ CREATE TABLE `eco_cargo_stats` (
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `eco_cargo_zones`
+-- Tábla szerkezet ehhez a táblához `realrpg_cargo_zones`
 --
 
-CREATE TABLE `eco_cargo_zones` (
+CREATE TABLE `realrpg_cargo_zones` (
   `id` bigint(20) NOT NULL,
   `name` varchar(255) NOT NULL DEFAULT '',
   `address` varchar(255) NOT NULL DEFAULT '',
@@ -422,10 +422,10 @@ CREATE TABLE `eco_cargo_zones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- A tábla adatainak kiíratása `eco_cargo_zones`
+-- A tábla adatainak kiíratása `realrpg_cargo_zones`
 --
 
-INSERT INTO `eco_cargo_zones` (`id`, `name`, `address`, `description`, `actionpoint`, `spawnpoint`) VALUES
+INSERT INTO `realrpg_cargo_zones` (`id`, `name`, `address`, `description`, `actionpoint`, `spawnpoint`) VALUES
 (1, 'Rogers Salvage & Scrap', 'La Puerta - La Puerta Fwy', 'Hulladéktelep és újrahasznosító központ', '-444.45, -1704.92, 17.94', '-463.59, -1694.62, 20.7, 244.0|-425.32, -1715.9, 21.07, 270.0|-451.78, -1720.09, 20.5, 352.0'),
 (2, 'Fridgit Ice & Storage - Food', 'La Puerta - Mutiny Rd', 'Hűtőraktár', '-579.56, -1785.75, 21.96', '-599.49, -1793.4, 25.41, 146.0|-639.96, -1780.6, 26.12, 126.0|-636.26, -1784.6, 26.06, 126.0'),
 (3, 'STD Contractors Construction Company', 'Little Seoul - Calais Ave', 'Építkezés', '-493.67, -952.46, 23.26', '-499.61, -937.14, 25.83, 166.0|-474.6, -936.38, 25.47, 182.0|-490.05, -970.98, 25.37, 92.0|-463.09, -983.45, 25.36, 92.0'),
@@ -513,27 +513,27 @@ INSERT INTO `eco_cargo_zones` (`id`, `name`, `address`, `description`, `actionpo
 --
 
 --
--- A tábla indexei `eco_cargo_distances`
+-- A tábla indexei `realrpg_cargo_distances`
 --
-ALTER TABLE `eco_cargo_distances`
+ALTER TABLE `realrpg_cargo_distances`
   ADD UNIQUE KEY `concat_id` (`id`) USING BTREE;
 
 --
--- A tábla indexei `eco_cargo_products`
+-- A tábla indexei `realrpg_cargo_products`
 --
-ALTER TABLE `eco_cargo_products`
+ALTER TABLE `realrpg_cargo_products`
   ADD PRIMARY KEY (`id`);
 
 --
--- A tábla indexei `eco_cargo_stats`
+-- A tábla indexei `realrpg_cargo_stats`
 --
-ALTER TABLE `eco_cargo_stats`
+ALTER TABLE `realrpg_cargo_stats`
   ADD PRIMARY KEY (`identifier`);
 
 --
--- A tábla indexei `eco_cargo_zones`
+-- A tábla indexei `realrpg_cargo_zones`
 --
-ALTER TABLE `eco_cargo_zones`
+ALTER TABLE `realrpg_cargo_zones`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -541,15 +541,15 @@ ALTER TABLE `eco_cargo_zones`
 --
 
 --
--- AUTO_INCREMENT a táblához `eco_cargo_products`
+-- AUTO_INCREMENT a táblához `realrpg_cargo_products`
 --
-ALTER TABLE `eco_cargo_products`
+ALTER TABLE `realrpg_cargo_products`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
--- AUTO_INCREMENT a táblához `eco_cargo_zones`
+-- AUTO_INCREMENT a táblához `realrpg_cargo_zones`
 --
-ALTER TABLE `eco_cargo_zones`
+ALTER TABLE `realrpg_cargo_zones`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 COMMIT;
 

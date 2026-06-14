@@ -120,11 +120,11 @@ DoCustomHudText = ECO.Hud.notify
 -- EVENT HANDLERS
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:showNotification', function(data)
+RegisterNetEvent('realrpg_cargo:showNotification', function(data)
     ECO.Hud.notify(data.type, data.text, data.length, data.style)
 end)
 
-RegisterNetEvent('eco_cargo:missionNotification', function(data)
+RegisterNetEvent('realrpg_cargo:missionNotification', function(data)
 
     if ECO.PLAYER.job then
 
@@ -147,7 +147,7 @@ end)
 -- ACHIEVEMENT NOTIFICATIONS
 -- ============================================================
 
-RegisterNetEvent('eco_cargo:achievementUnlocked', function(data)
+RegisterNetEvent('realrpg_cargo:achievementUnlocked', function(data)
 
     -- Show a special achievement notification
     SendNUIMessage({

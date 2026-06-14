@@ -25,6 +25,7 @@
         <MissionList v-if="currentPage === 'MISSION_LIST'" :data="pageData" />
         <Statistics v-if="currentPage === 'STATISTICS'" :data="pageData" />
         <Maintenance v-if="currentPage === 'MAINTENANCE'" :data="pageData" />
+        <CompanyDashboard v-if="currentPage === 'COMPANY'" :data="pageData" />
       </div>
     </div>
   </transition>
@@ -45,6 +46,7 @@ import CargoReport from './pages/CargoReport.vue'
 import MissionList from './pages/MissionList.vue'
 import Statistics from './pages/Statistics.vue'
 import Maintenance from './pages/Maintenance.vue'
+import CompanyDashboard from './pages/CompanyDashboard.vue'
 
 const currentPage = ref(null)
 const pageData = ref(null)
@@ -108,6 +110,10 @@ useNui().onMessage((event) => {
     case 'CLOSE_PAGE':
       currentPage.value = null
       pageData.value = null
+      break
+
+    case 'COMPANY':
+      openPage('COMPANY', item.data, 'Vállalkozás', '')
       break
   }
 })

@@ -234,7 +234,7 @@ function finishCargo(state)
     UnsetCruiseControl()
 
     -- DELETE SERVER RECORD
-    TriggerServerEvent('eco_cargo:deleteCargo', ECO.CARGO.trailerPlate, state)
+    TriggerServerEvent('realrpg_cargo:deleteCargo', ECO.CARGO.trailerPlate, state)
 
     -- DISABLE REINIT CARGO
     ECO.MONITOR.queryStatus[ECO.CARGO.trailer] = 0
@@ -273,7 +273,7 @@ function initCargo()
     -- DBQUERY
     if (ECO.CARGO.trailerPlate ~= plate or ECO.CARGO.monitorOwner ~= ECO.PLAYER.serverId) and ECO.MONITOR.queryStatus[trailer] ~= 0 then
 
-        local ecoCargo = lib.callback.await('eco_cargo:cargoLoader', false, plate)
+        local ecoCargo = lib.callback.await('realrpg_cargo:cargoLoader', false, plate)
 
         ECO.MONITOR.queryStatus[trailer] = 0
 
@@ -307,7 +307,7 @@ function initCargo()
         -- SET MONITOR OWNER
         if ECO.CARGO.monitorOwner ~= ECO.PLAYER.serverId then
 
-            TriggerServerEvent('eco_cargo:changeMonitorOwner', ECO.CARGO.monitorOwner, ECO.CARGO.trailerPlate)
+            TriggerServerEvent('realrpg_cargo:changeMonitorOwner', ECO.CARGO.monitorOwner, ECO.CARGO.trailerPlate)
             ECO.CARGO.monitorOwner = ECO.PLAYER.serverId
         end
 

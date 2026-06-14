@@ -39,7 +39,7 @@ RegisterNUICallback('missionRegister', function(data, cb)
                 local missionId = concatId(data.loadingZoneId, data.productId, '_')
 
                 -- VÉDELEM KÉRŐ ÜZENET KÜLDÉSE:
-                TriggerServerEvent('eco_cargo:missionRegister', {
+                TriggerServerEvent('realrpg_cargo:missionRegister', {
                     missionId = missionId,
                     productId = data.productId,
                     loadingZoneId = data.loadingZoneId,
@@ -98,7 +98,7 @@ RegisterNUICallback('checkDefense', function(data, cb)
             }))
 
             ECO.MONITOR.checkDefenseTime = time + 10000
-            TriggerServerEvent('eco_cargo:showCountingZone', GetEntityCoords(_PlayerPedId))
+            TriggerServerEvent('realrpg_cargo:showCountingZone', GetEntityCoords(_PlayerPedId))
         else
 
             cb(json.encode({
@@ -118,7 +118,7 @@ RegisterNUICallback('checkDefense', function(data, cb)
 end)
 
 -- DEFENDER COUNTING ZONE
-RegisterNetEvent('eco_cargo:showCountingZone', function(coord)
+RegisterNetEvent('realrpg_cargo:showCountingZone', function(coord)
 
     Citizen.CreateThread(function()
 
@@ -224,7 +224,7 @@ RegisterNUICallback('missionJoin', function(data, cb)
 
     if ECO.MISSION[data.missionId] then
 
-        TriggerServerEvent('eco_cargo:missionUpdate', data, 'join')
+        TriggerServerEvent('realrpg_cargo:missionUpdate', data, 'join')
     else
 
         DoCustomHudText('error', _('mission_does_not_exist'))
@@ -237,7 +237,7 @@ RegisterNUICallback('missionLeave', function(data, cb)
 
     SetNuiFocus(false, false)
 
-    TriggerServerEvent('eco_cargo:missionUpdate', data, 'leave')
+    TriggerServerEvent('realrpg_cargo:missionUpdate', data, 'leave')
 
     cb('ok')
 end)
@@ -246,12 +246,12 @@ RegisterNUICallback('missionDelete', function(data, cb)
 
     SetNuiFocus(false, false)
 
-    TriggerServerEvent('eco_cargo:missionUpdate', data, 'delete')
+    TriggerServerEvent('realrpg_cargo:missionUpdate', data, 'delete')
 
     cb('ok')
 end)
 
-RegisterNetEvent('eco_cargo:trailerSignal', function(coords, plate, state)
+RegisterNetEvent('realrpg_cargo:trailerSignal', function(coords, plate, state)
 
     if not ECO.MONITOR.trailerSignal then
 
@@ -269,7 +269,7 @@ RegisterNetEvent('eco_cargo:trailerSignal', function(coords, plate, state)
     end
 end)
 
-RegisterNetEvent('eco_cargo:addAlarmBlip', function(player)
+RegisterNetEvent('realrpg_cargo:addAlarmBlip', function(player)
 
     local ped = GetPlayerPed(player)
     local blip = GetBlipFromEntity(ped)

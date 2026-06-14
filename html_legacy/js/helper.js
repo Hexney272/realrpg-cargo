@@ -4,10 +4,11 @@
 
 'use strict';
 
-const MONEY = new Intl.NumberFormat('en-US', {
+const MONEY = new Intl.NumberFormat('hu-HU', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0
+    currency: 'HUF',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
 });
 
 /**
@@ -113,11 +114,11 @@ function isEmpty(obj) {
 
 /**
  * Get the resource name dynamically from FiveM NUI environment.
- * Falls back to 'eco_cargo' if not available (e.g. during development outside FiveM).
+ * Falls back to 'realrpg_cargo' if not available (e.g. during development outside FiveM).
  */
 const RESOURCE_NAME = (typeof GetParentResourceName === 'function')
     ? GetParentResourceName()
-    : 'eco_cargo';
+    : 'realrpg_cargo';
 
 /**
  * Post data to NUI callback

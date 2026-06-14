@@ -9,7 +9,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 // Resolve resource name dynamically (FiveM provides GetParentResourceName)
 const RESOURCE_NAME = (typeof GetParentResourceName === 'function')
   ? GetParentResourceName()
-  : 'eco_cargo'
+  : 'realrpg_cargo'
 
 /**
  * Send data to a registered NUI callback on the Lua side
@@ -106,12 +106,13 @@ export function useNuiEvent(subjects, handler) {
 }
 
 /**
- * Currency formatter (USD)
+ * Currency formatter (HUF - Forint)
  */
-export const MONEY = new Intl.NumberFormat('en-US', {
+export const MONEY = new Intl.NumberFormat('hu-HU', {
   style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 0
+  currency: 'HUF',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
 })
 
 /**

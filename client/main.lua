@@ -36,7 +36,7 @@ Citizen.CreateThread(function()
     while not ESX.PlayerLoaded do Citizen.Wait(1000) end
 
     -- LOADING PLAYER LIST
-    ECO.PLAYERS = lib.callback.await('eco_cargo:getPlayers', false)
+    ECO.PLAYERS = lib.callback.await('realrpg_cargo:getPlayers', false)
     ECO.LOADED.players = true
 
     if Config.kashacters then
@@ -49,17 +49,17 @@ Citizen.CreateThread(function()
     end
 
     -- LOADING PLAYER DATA
-    local player = lib.callback.await('eco_cargo:getPlayer', false)
+    local player = lib.callback.await('realrpg_cargo:getPlayer', false)
     ECO.PLAYER = player
     ECO.PLAYER.cargoRequestTime = 0
     ECO.LOADED.player = true
 
     -- LOADING MISSION DATA
-    ECO.MISSION = lib.callback.await('eco_cargo:getMission', false)
+    ECO.MISSION = lib.callback.await('realrpg_cargo:getMission', false)
     ECO.LOADED.mission = true
 
     -- LOADING DATABASE: ZONE DATA
-    local zones = lib.callback.await('eco_cargo:getZones', false)
+    local zones = lib.callback.await('realrpg_cargo:getZones', false)
 
     if zones and next(zones) ~= nil then
 
@@ -75,7 +75,7 @@ Citizen.CreateThread(function()
     ECO.LOADED.allZones = true
 
     -- LOADING DATABASE: DISTANCE DATA
-    local distances = lib.callback.await('eco_cargo:getDistances', false)
+    local distances = lib.callback.await('realrpg_cargo:getDistances', false)
 
     if distances and next(distances) ~= nil then
 
@@ -89,7 +89,7 @@ Citizen.CreateThread(function()
     ECO.LOADED.distances = true
 
     -- LOADING DATABASE: PRODUCT DATA
-    local products, loadingZonesIds = lib.callback.await('eco_cargo:getProducts', false)
+    local products, loadingZonesIds = lib.callback.await('realrpg_cargo:getProducts', false)
 
     if products and next(products) ~= nil then
 
@@ -167,18 +167,18 @@ Citizen.CreateThread(function()
             if (isInMarker and not hasAlreadyEnteredMarker) or (isInMarker and lastZone ~= currentZone) then
                 hasAlreadyEnteredMarker = true
                 lastZone = currentZone
-                TriggerEvent('eco_cargo:hasEnteredMarker', currentZone)
+                TriggerEvent('realrpg_cargo:hasEnteredMarker', currentZone)
             end
 
             if not isInMarker and hasAlreadyEnteredMarker then
                 hasAlreadyEnteredMarker = false
-                TriggerEvent('eco_cargo:hasExitedMarker', lastZone)
+                TriggerEvent('realrpg_cargo:hasExitedMarker', lastZone)
             end
         end
     end
 end)
 
-AddEventHandler('eco_cargo:hasEnteredMarker', function(itemIndex)
+AddEventHandler('realrpg_cargo:hasEnteredMarker', function(itemIndex)
 
     currentActionData = ECO.zones[itemIndex]
 
@@ -195,7 +195,7 @@ AddEventHandler('eco_cargo:hasEnteredMarker', function(itemIndex)
     sendHudActionData(currentActionData, 'append')
 end)
 
-AddEventHandler('eco_cargo:hasExitedMarker', function(itemIndex)
+AddEventHandler('realrpg_cargo:hasExitedMarker', function(itemIndex)
 
     currentAction = nil
     sendHudActionData({}, 'close')
@@ -233,7 +233,7 @@ Citizen.CreateThread(function()
                         ECO.CARGO.showPayData = true
 
                         -- SECURE: Server handles payment calculation
-                        TriggerServerEvent('eco_cargo:deliverCargo', ECO.CARGO.trailerPlate)
+                        TriggerServerEvent('realrpg_cargo:deliverCargo', ECO.CARGO.trailerPlate)
 
                         DetachVehicleFromTrailer(ECO.Vehicle)
                         Citizen.Wait(300)
@@ -243,7 +243,7 @@ Citizen.CreateThread(function()
 
                     elseif currentAction == 'open_freight_list' then
 
-                        local serverTimeStamp = lib.callback.await('eco_cargo:getServerTime', false)
+                        local serverTimeStamp = lib.callback.await('realrpg_cargo:getServerTime', false)
 
                         local loadingPositionId = currentActionData['id']
                         local zoneProductsIds = getZoneProductsIds(loadingPositionId)
@@ -313,7 +313,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-RegisterNetEvent('eco_cargo:changeMonitorOwner', function(trailerPlate, newOwner)
+RegisterNetEvent('realrpg_cargo:changeMonitorOwner', function(trailerPlate, newOwner)
 
     -- changeMonitorOwner
     if ECO.CARGO.trailerPlate == trailerPlate then
@@ -372,7 +372,7 @@ RegisterNUICallback('registerCargo', function(data, cb)
 
     if startPermission then
 
-        local remainingTime = lib.callback.await('eco_cargo:getRemainingTime', false, data)
+        local remainingTime = lib.callback.await('realrpg_cargo:getRemainingTime', false, data)
 
         if remainingTime == 0 then
 
@@ -413,7 +413,7 @@ RegisterNUICallback('registerCargo', function(data, cb)
                     owner = ECO.PLAYER
                 }
 
-                TriggerServerEvent('eco_cargo:cargoRegister', ECO.CARGO)
+                TriggerServerEvent('realrpg_cargo:cargoRegister', ECO.CARGO)
             end
         else
 
@@ -436,7 +436,7 @@ RegisterNUICallback('exit', function(data, cb)
 end)
 
 -- SECURE: Receive payment data from server after delivery
-RegisterNetEvent('eco_cargo:paymentProcessed', function(paymentData)
+RegisterNetEvent('realrpg_cargo:paymentProcessed', function(paymentData)
 
     -- Show the cargo report with server-calculated payment
     local report = createCargoReport(ECO.CARGO)
@@ -470,7 +470,7 @@ RegisterCommand('inspect', function()
         return false
     end
 
-    local data = lib.callback.await('eco_cargo:getDataByPlate', false, GetVehicleNumberPlateText(vehicle))
+    local data = lib.callback.await('realrpg_cargo:getDataByPlate', false, GetVehicleNumberPlateText(vehicle))
 
     if data then
         openNUI(createCargoReport(data), "CARGO_REPORT")

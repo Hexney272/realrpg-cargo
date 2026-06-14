@@ -30,6 +30,7 @@ client_scripts {
     'client/main.lua',
     'client/monitoring.lua',
     'client/cruise_control.lua',
+    'client/company.lua',
 }
 
 -- Server-side scripts
@@ -38,6 +39,7 @@ server_scripts {
     'libs/calculator.lua',
     'server/discord.lua',
     'server/achievements.lua',
+    'server/company.lua',
     'server/main.lua',
 }
 

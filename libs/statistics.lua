@@ -7,7 +7,7 @@
 
 RegisterCommand('cargostat', function()
 
-    local result = lib.callback.await('eco_cargo:getStatistics', false)
+    local result = lib.callback.await('realrpg_cargo:getStatistics', false)
 
     SetNuiFocus(true, true)
 
@@ -27,7 +27,7 @@ end)
 
 RegisterNUICallback('getAllStatistics', function(data, cb)
 
-    local result = lib.callback.await('eco_cargo:getAllStatistics', false, data)
+    local result = lib.callback.await('realrpg_cargo:getAllStatistics', false, data)
 
     if result[1] then
 

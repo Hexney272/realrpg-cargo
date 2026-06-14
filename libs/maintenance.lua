@@ -23,7 +23,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
     Citizen.CreateThread(function()
 
         -- ÚTVONALAK KIGYŰJTÉSE
-        local product = lib.callback.await('eco_cargo:getAllProducts', false)
+        local product = lib.callback.await('realrpg_cargo:getAllProducts', false)
 
         if (product and product[1] ~= nil) then
 
@@ -58,7 +58,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
         end
 
         -- TÁVOLSÁGADATOK LEKÉRÉSE
-        local result = lib.callback.await('eco_cargo:getDistances', false)
+        local result = lib.callback.await('realrpg_cargo:getDistances', false)
 
         if (result and result[1] ~= nil) then
 
@@ -128,7 +128,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
 
             if next(injectData) ~= nil then
 
-                TriggerServerEvent('eco_cargo:updateDistance', injectData)
+                TriggerServerEvent('realrpg_cargo:updateDistance', injectData)
             end
 
             -- PAUSE MENU CLOSE
@@ -155,7 +155,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
                     table.insert(orphanDistanceRecord, k)
                 end
 
-                TriggerServerEvent('eco_cargo:deleteDistance', orphanDistanceRecord)
+                TriggerServerEvent('realrpg_cargo:deleteDistance', orphanDistanceRecord)
             end
         end
     end)
@@ -163,7 +163,7 @@ RegisterNUICallback('distanceCalc', function(data, cb)
     cb('ok')
 end)
 
-RegisterNetEvent('eco_cargo:cargoDiagnostics', function()
+RegisterNetEvent('realrpg_cargo:cargoDiagnostics', function()
 
     local loading, destination
     local id1, id2, idC
@@ -191,7 +191,7 @@ RegisterNetEvent('eco_cargo:cargoDiagnostics', function()
     Citizen.CreateThread(function()
 
         -- LOADING DATABASE: ZONE DATA
-        local zones = lib.callback.await('eco_cargo:getZones', false)
+        local zones = lib.callback.await('realrpg_cargo:getZones', false)
 
         if zones and zones[1] ~= nil then
 
@@ -210,14 +210,14 @@ RegisterNetEvent('eco_cargo:cargoDiagnostics', function()
         ECO.DIAGNOSTICS.countActionPoints = assocCount(ECO.allZones)
 
         -- TÁVOLSÁGADATOK LEKÉRÉSE
-        local distResult = lib.callback.await('eco_cargo:getDistances', false)
+        local distResult = lib.callback.await('realrpg_cargo:getDistances', false)
 
         if (distResult and distResult[1] ~= nil) then
             for i = 1, #distResult do distances[distResult[i].id] = distResult[i] end
         end
 
         -- ÚTVONALAK KIGYŰJTÉSE
-        local product = lib.callback.await('eco_cargo:getAllProducts', false)
+        local product = lib.callback.await('realrpg_cargo:getAllProducts', false)
 
         if (product and product[1] ~= nil) then
 
