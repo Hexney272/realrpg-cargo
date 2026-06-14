@@ -1,0 +1,225 @@
+/* ============================================================
+   ECO Cargo - Global Styles
+   Preserves original visual identity with CSS custom properties
+   ============================================================ */
+
+:root {
+  /* Core palette */
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #1d1d1d;
+  --color-bg-tertiary: #292929;
+  --color-bg-header: #292929;
+
+  /* Accent colors */
+  --color-accent: #edc054;
+  --color-accent-hover: #f5d061;
+  --color-danger: #e31837;
+  --color-danger-hover: #f40827;
+  --color-success: #49c34f;
+  --color-warning: #f6bb42;
+  --color-info: #5596c1;
+
+  /* Text */
+  --color-text-primary: #fdfdfd;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666;
+
+  /* Mission colors */
+  --color-mission: #f43b14;
+  --color-mission-hover: #f40827;
+
+  /* Borders */
+  --color-border: #3a3230;
+
+  /* Font */
+  --font-primary: 'Play', sans-serif;
+  --font-hud: Verdana, Geneva, sans-serif;
+
+  /* Spacing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--font-primary);
+  position: relative;
+  overflow: hidden;
+  background-color: transparent !important;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+  position: relative;
+}
+
+a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* ============================================================
+   MATERIAL ICONS
+   ============================================================ */
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+}
+
+/* ============================================================
+   PAGE WRAPPER (modal overlay)
+   ============================================================ */
+
+.pageWrapper {
+  max-width: 1200px;
+  min-width: 800px;
+  height: 100%;
+  min-height: 100%;
+  margin: 0 auto;
+  background-color: var(--color-bg-primary);
+  overflow: auto;
+}
+
+.header {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-tertiary) url('/img/eco_cargo.png') no-repeat top left;
+  background-size: contain;
+}
+
+.header h1 {
+  font-size: 22px;
+  text-align: center;
+  margin: 0;
+}
+
+.btnClose {
+  display: block;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 8px 12px;
+  text-decoration: none;
+  background-color: var(--color-danger);
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btnClose:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.titleContainer {
+  margin: 0 5px;
+  padding: 10px;
+  position: relative;
+}
+
+.title {
+  margin: 0 !important;
+  font-size: 24px;
+}
+
+.description {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+#page {
+  position: relative;
+  padding: 0 5px;
+}
+
+/* ============================================================
+   HUD WRAPPER
+   ============================================================ */
+
+#hudWrapper {
+  font-family: var(--font-hud);
+  font-size: 0.7vw;
+  position: absolute;
+  width: 30%;
+  right: 0;
+  left: 0;
+  top: 10px;
+  margin: auto;
+  z-index: 50;
+}
+
+/* ============================================================
+   PAGE TRANSITIONS
+   ============================================================ */
+
+.page-fade-enter-active {
+  transition: opacity 0.25s ease;
+}
+.page-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
+}
+
+/* ============================================================
+   SCROLLBAR (custom for dark theme)
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}

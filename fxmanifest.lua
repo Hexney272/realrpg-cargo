@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Tutya & Ekhion'
 description 'RealRPG - Cargo Delivery System'
-version '2.0.0'
+version '2.2.0'
 
 -- Shared resources (loaded on both client and server)
 shared_scripts {
@@ -41,16 +41,16 @@ server_scripts {
     'server/main.lua',
 }
 
--- NUI (HTML interface)
-ui_page 'html/ui.html'
+-- NUI (Vue 3 + Vite built output)
+ui_page 'html/dist/index.html'
 
 files {
     'locales/en.json',
     'locales/hu.json',
-    'html/ui.html',
-    'html/styles.css',
-    'html/js/*.js',
-    'html/img/*.*',
+    'html/dist/index.html',
+    'html/dist/js/*.js',
+    'html/dist/css/*.css',
+    'html/dist/img/*.*',
 }
 
 -- Required dependencies
