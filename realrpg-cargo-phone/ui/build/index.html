@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>RealRPG Cargo</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>RealRPG Cargo</h1>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="tab-nav">
+            <button class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <span class="material-icons">dashboard</span>
+            </button>
+            <button class="tab" data-tab="contracts" onclick="switchTab('contracts')">
+                <span class="material-icons">description</span>
+            </button>
+            <button class="tab" data-tab="stats" onclick="switchTab('stats')">
+                <span class="material-icons">bar_chart</span>
+            </button>
+            <button class="tab" data-tab="finance" onclick="switchTab('finance')">
+                <span class="material-icons">account_balance</span>
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <section id="tab-dashboard" class="tab-content active">
+            <div id="company-info" class="card hidden">
+                <div class="card-header">
+                    <span class="material-icons">business</span>
+                    <span id="company-name">-</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="company-balance">0</span>
+                        <span class="stat-label">Egyenleg</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="company-rep">0</span>
+                        <span class="stat-label">Reputáció</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="company-deliveries">0</span>
+                        <span class="stat-label">Szállítás</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="company-employees">0</span>
+                        <span class="stat-label">Alkalmazott</span>
+                    </div>
+                </div>
+                <div class="role-badge" id="my-role">Sofőr</div>
+            </div>
+
+            <div id="no-company" class="card">
+                <span class="material-icons empty-icon">local_shipping</span>
+                <p>Nincs vállalkozásod. Használd a <strong>/company</strong> parancsot a játékban!</p>
+            </div>
+        </section>
+
+        <!-- Contracts Tab -->
+        <section id="tab-contracts" class="tab-content">
+            <div id="contracts-list"></div>
+            <div id="no-contracts" class="card">
+                <span class="material-icons empty-icon">description</span>
+                <p>Nincs elérhető szerződés.</p>
+            </div>
+        </section>
+
+        <!-- Stats Tab -->
+        <section id="tab-stats" class="tab-content">
+            <div id="stats-content" class="card">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-deliveries">0</span>
+                        <span class="stat-label">Fuvarok</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-distance">0</span>
+                        <span class="stat-label">Kilométer</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-quality">0%</span>
+                        <span class="stat-label">Minőség</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-success">0%</span>
+                        <span class="stat-label">Sikeresség</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finance Tab -->
+        <section id="tab-finance" class="tab-content">
+            <div class="card" id="finance-panel">
+                <h3>Céges kassza</h3>
+                <div class="balance-display">
+                    <span id="finance-balance">0 Ft</span>
+                </div>
+                <div class="finance-actions">
+                    <input type="number" id="finance-amount" placeholder="Összeg (Ft)" />
+                    <div class="btn-row">
+                        <button class="btn btn-green" onclick="doDeposit()">Befizetés</button>
+                        <button class="btn btn-red" onclick="doWithdraw()">Kivétel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cfx-nui-qs-smartphone/web/build/bridge/qs-phone-bridge.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
