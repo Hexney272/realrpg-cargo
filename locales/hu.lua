@@ -1,3 +1,12 @@
+--[[
+    ECO Cargo - Hungarian Locale (Magyar)
+    
+    Ez a fajl biztositja a visszafele kompatibilitast az ESX locale rendszerrel.
+    Uj forditasokhoz hasznald inkabb a JSON fajlokat (locales/hu.json).
+    
+    Hasznalat: _('key') vagy _('key', arg1, arg2)
+]]
+
 Locales['hu'] = {
     ['open_freight_list'] = 'Fuvar vállalás - E -',
     ['delivery_of_goods'] = 'Fuvar teljesítve! Lepakolás - E -',

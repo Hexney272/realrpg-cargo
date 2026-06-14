@@ -1,5 +1,8 @@
---ESX = nil
---TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+--[[
+    RealRPG - Cargo Delivery System
+    Server-side logic
+    Modernized: ox_lib callbacks, oxmysql, secure payment
+]]
 
 ECO = {
     CARGO = {},
@@ -9,12 +12,15 @@ ECO = {
     loadingZonesIds = {}
 }
 
-ESX.RegisterServerCallback('eco_cargo:getMission', function(source, cb)
+-- ============================================================
+-- CALLBACKS (using lib.callback from ox_lib)
+-- ============================================================
 
-    cb(ECO.MISSION)
+lib.callback.register('eco_cargo:getMission', function(source)
+    return ECO.MISSION
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getPlayers', function(source, cb)
+lib.callback.register('eco_cargo:getPlayers', function(source)
 
     -- PLAYER MONITORING
     if next(ECO.PLAYERS) == nil then
@@ -22,28 +28,25 @@ ESX.RegisterServerCallback('eco_cargo:getPlayers', function(source, cb)
         local xPlayer
         local getPlayers = ESX.GetPlayers()
 
-
         for i = 1, #getPlayers do
 
             xPlayer = ESX.GetPlayerFromId(getPlayers[i])
 
             if xPlayer ~= nil then
-
                 ECO.PLAYERS[xPlayer.source] = xPlayer.job.name
             end
         end
     end
 
-    cb(ECO.PLAYERS)
+    return ECO.PLAYERS
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getPlayer', function(source, cb)
+lib.callback.register('eco_cargo:getPlayer', function(source)
 
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
+    local xPlayer = ESX.GetPlayerFromId(source)
 
     local userData = {
-        serverId = _source,
+        serverId = source,
         characterName = 'John Doe',
         dateOfBirth = '-',
         group = 'player',
@@ -57,144 +60,119 @@ ESX.RegisterServerCallback('eco_cargo:getPlayer', function(source, cb)
         userData.job = xPlayer.job
         userData.identifier = xPlayer.identifier
 
-        MySQL.Async.fetchAll('SELECT * FROM users WHERE identifier = @identifier', { ['@identifier'] = userData.identifier }, function(user)
+        local user = MySQL.query.await('SELECT * FROM users WHERE identifier = @identifier', {
+            ['@identifier'] = userData.identifier
+        })
 
-            if user[1] then
+        if user and user[1] then
 
-                local firstname = user[1].firstname or ''
-                local lastname = user[1].lastname or ''
+            local firstname = user[1].firstname or ''
+            local lastname = user[1].lastname or ''
 
-                userData.characterName = firstname .. " " .. lastname
-                userData.dateOfBirth = user[1].dateofbirth or '-'
-                userData.group = user[1].group or 'player'
-                userData.permissionLevel = user[1].permission_level or 0
-
-            end
-
-            cb(userData)
-
-        end)
-
-    else
-
-        cb(userData)
-
+            userData.characterName = firstname .. " " .. lastname
+            userData.dateOfBirth = user[1].dateofbirth or '-'
+            userData.group = user[1].group or 'player'
+            userData.permissionLevel = user[1].permission_level or 0
+        end
     end
+
+    return userData
 end)
 
+lib.callback.register('eco_cargo:getZones', function(source)
 
-ESX.RegisterServerCallback('eco_cargo:getZones', function(source, cb)
-
-    MySQL.Async.fetchAll('SELECT * FROM eco_cargo_zones', {}, function(zones)
-
-        cb(zones)
-    end)
+    local zones = MySQL.query.await('SELECT * FROM eco_cargo_zones', {})
+    return zones
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getProducts', function(source, cb)
+lib.callback.register('eco_cargo:getProducts', function(source)
 
     if next(ECO.PRODUCTS) == nil then
 
         local sql = 'SELECT * FROM `eco_cargo_products` WHERE `loading` NOT IN("[]", "") AND `destination` NOT IN("[]", "")'
+        local result = MySQL.query.await(sql, {})
 
-        MySQL.Async.fetchAll(sql, {}, function(result)
+        if result and result[1] then
 
-            if result[1] then
+            ECO.loadingZonesIds = {}
 
-                ECO.loadingZonesIds = {}
+            local row, loading
 
-                local row, loading
+            for i = 1, #result do
 
-                for i = 1, #result do
+                row = result[i]
+                loading = {}
 
-                    row = result[i]
-                    loading = {}
+                row.loading = json.decode(row.loading)
 
-                    row.loading = json.decode(row.loading)
+                if row.loading then
 
-                    if row.loading then
+                    for j = 1, #row.loading do
 
-                        for j = 1, #row.loading do
-
-                            loading[row.loading[j]] = 0
-                            ECO.loadingZonesIds[row.loading[j]] = true
-                        end
+                        loading[row.loading[j]] = 0
+                        ECO.loadingZonesIds[row.loading[j]] = true
                     end
-
-                    ECO.PRODUCTS[row.id] = row
-                    ECO.PRODUCTS[row.id].loading = loading
                 end
+
+                ECO.PRODUCTS[row.id] = row
+                ECO.PRODUCTS[row.id].loading = loading
             end
-
-            cb(ECO.PRODUCTS, ECO.loadingZonesIds)
-        end)
-
-    else
-
-        cb(ECO.PRODUCTS, ECO.loadingZonesIds)
+        end
     end
+
+    return ECO.PRODUCTS, ECO.loadingZonesIds
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getAllProducts', function(source, cb)
+lib.callback.register('eco_cargo:getAllProducts', function(source)
 
-    MySQL.Async.fetchAll('SELECT * FROM `eco_cargo_products`', {}, function(result)
-
-        cb(result)
-    end)
+    local result = MySQL.query.await('SELECT * FROM `eco_cargo_products`', {})
+    return result
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getDistances', function(source, cb)
+lib.callback.register('eco_cargo:getDistances', function(source)
 
-    MySQL.Async.fetchAll('SELECT * FROM `eco_cargo_distances`', {}, function(distances)
-
-        cb(distances)
-    end)
+    local distances = MySQL.query.await('SELECT * FROM `eco_cargo_distances`', {})
+    return distances
 end)
 
-ESX.RegisterServerCallback('eco_cargo:cargoLoader', function(source, cb, plate, existsCheck)
-
-    -- local _source = source
-    -- local xPlayer = ESX.GetPlayerFromId(_source)
-    --
-    -- local identifier = xPlayer.identifier
+lib.callback.register('eco_cargo:cargoLoader', function(source, plate, existsCheck)
 
     if existsCheck then
-
-        --[[if ECO.CARGO[plate] then
-
-            ECO.CARGO[plate].requiredReSpawning = true
-
-            local vehicle = getVehicleFromPlate(ECO.CARGO[plate].trailerPlate)
-
-            if vehicle.coords then
-
-                ECO.CARGO[plate].coords = vehicle.coords -- vector3 tostring??? CONVERT PROBLÉMA?
-                ECO.CARGO[plate].requiredReSpawning = false
-            end
-
-            cb(ECO.CARGO[plate])
-        else
-
-            cb(nil)
-        end]]
+        -- Reserved for future use (trailer respawning logic)
+        return nil
     else
-
-        cb(ECO.CARGO[plate])
+        return ECO.CARGO[plate]
     end
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getDataByPlate', function(source, cb, plate)
+lib.callback.register('eco_cargo:getDataByPlate', function(source, plate)
 
     plate = safePlate(plate)
-    cb(ECO.CARGO[plate])
+    return ECO.CARGO[plate]
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getAllStatistics', function(source, cb, data)
+lib.callback.register('eco_cargo:getAllStatistics', function(source, data)
 
-    if not data.orderBy or data.orderBy == '' then data.orderBy = 'all_started' end
-    if not data.dir or data.dir == '' then data.dir = 'DESC' end
+    -- SECURITY: Whitelist allowed orderBy columns to prevent SQL injection
+    local allowedOrderBy = {
+        all_started = true,
+        all_done = true,
+        distance = true,
+        quality_rate = true,
+        success_rate = true,
+        vulnerable = true,
+        working_time = true,
+        last_activity = true
+    }
 
-    -- STAT RECORD
+    local allowedDir = {
+        ASC = true,
+        DESC = true
+    }
+
+    if not data.orderBy or not allowedOrderBy[data.orderBy] then data.orderBy = 'all_started' end
+    if not data.dir or not allowedDir[data.dir] then data.dir = 'DESC' end
+
     local sql = [[
         SELECT `eco_cargo_stats`.*,
         `eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery` as `all_started`,
@@ -211,20 +189,15 @@ ESX.RegisterServerCallback('eco_cargo:getAllStatistics', function(source, cb, da
         LIMIT 50
     ]]
 
-    MySQL.Async.fetchAll(sql, {}, function(result)
-
-        cb(result)
-    end)
+    local result = MySQL.query.await(sql, {})
+    return result
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getStatistics', function(source, cb)
+lib.callback.register('eco_cargo:getStatistics', function(source)
 
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-
+    local xPlayer = ESX.GetPlayerFromId(source)
     local identifier = xPlayer.identifier
 
-    -- STAT RECORD
     local sql = [[
         SELECT `eco_cargo_stats`.*,
         `eco_cargo_stats`.`started_mission` + `eco_cargo_stats`.`started_delivery` as `all_started`,
@@ -240,48 +213,46 @@ ESX.RegisterServerCallback('eco_cargo:getStatistics', function(source, cb)
         WHERE `eco_cargo_stats`.`identifier` = @identifier
     ]]
 
-    MySQL.Async.fetchAll(sql, {
-        ['@identifier'] = identifier
-    }, function(result)
-
-        cb(result)
-    end)
+    local result = MySQL.query.await(sql, { ['@identifier'] = identifier })
+    return result
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getServerTime', function(source, cb)
-
-    cb(os.time())
+lib.callback.register('eco_cargo:getServerTime', function(source)
+    return os.time()
 end)
 
-ESX.RegisterServerCallback('eco_cargo:getRemainingTime', function(source, cb, data)
+lib.callback.register('eco_cargo:getRemainingTime', function(source, data)
 
     local product = ECO.PRODUCTS[data.productId]
     local lastStartTime = product.loading[data.loadingZoneId]
 
-    cb(remainingTime(lastStartTime, product.reproduction_time, os.time()))
+    return remainingTime(lastStartTime, product.reproduction_time, os.time())
 end)
 
+-- ============================================================
 -- PLAYER MONITORING
-AddEventHandler('esx:setJob', function(playerId, job)
+-- ============================================================
 
+AddEventHandler('esx:setJob', function(playerId, job)
     ECO.PLAYERS[playerId] = job.name
     TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
 AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
-
     ECO.PLAYERS[playerId] = xPlayer.job.name
     TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
 AddEventHandler('esx:playerDropped', function(playerId)
-
     ECO.PLAYERS[playerId] = nil
     TriggerClientEvent('eco_cargo:updatePlayers', -1, ECO.PLAYERS)
 end)
 
-RegisterNetEvent('eco_cargo:cargoRegister')
-AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
+-- ============================================================
+-- CARGO EVENTS
+-- ============================================================
+
+RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
 
     local _source = source
     local plate = safePlate(ecoCargo.trailerPlate)
@@ -290,6 +261,13 @@ AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
 
     if not ECO.CARGO[plate] then ECO.CARGO[plate] = {} end
 
+    -- SECURITY: Validate caution money from server-side product data
+    local product = ECO.PRODUCTS[tonumber(ecoCargo.productId)]
+    if product then
+        ecoCargo.cautionMoney = product.caution_money or 0
+        ecoCargo.goodsValue = product.value or 0
+    end
+
     --LAST START TIME REGISTER
     ECO.PRODUCTS[ecoCargo.productId].loading[ecoCargo.loadingZoneId] = osTime
 
@@ -297,16 +275,12 @@ AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
 
     table.refresh(ECO.CARGO[plate], ecoCargo)
 
-
-    -- PAY CAUTION
+    -- PAY CAUTION (using server-validated amount)
     local cautionMoney = tonumber(ecoCargo.cautionMoney)
 
-
     if type(cautionMoney) == 'number' and cautionMoney > 0 then
-
         removeMoney(_source, cautionMoney)
     end
-
 
     -- ADD PLATE MISSION DATA
     local missionId = concatId(ecoCargo.loadingZoneId, ecoCargo.productId, '_')
@@ -319,18 +293,12 @@ AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
         ECO.MISSION[missionId].destinationZoneId = ecoCargo.destinationZoneId
 
         TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
-
-        -- BROADCAST
         TriggerClientEvent('eco_cargo:missionNotification', -1, { otherText = _('mission_start_alert') })
     end
 
-
-    if ecoCargo.params.damageRoll < 10 or
-            ecoCargo.params.collisionSensitivity < 100 then
-
+    if ecoCargo.params.damageRoll < 10 or ecoCargo.params.collisionSensitivity < 100 then
         isVulnerable = true
     end
-
 
     -- STAT RECORD
     local sql = [[
@@ -342,31 +310,25 @@ AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
         `vulnerable`,
         `last_activity`
     ) VALUES (
-
         @identifier,
         @started_delivery,
         @started_mission,
         @vulnerable,
         current_timestamp()
-        )
-        ON DUPLICATE KEY UPDATE
+    )
+    ON DUPLICATE KEY UPDATE
         `started_delivery` = `started_delivery` + @started_delivery,
         `started_mission` = `started_mission` + @started_mission,
         `vulnerable` = `vulnerable` + @vulnerable,
         `last_activity` = current_timestamp()
     ]]
 
-
-    MySQL.Async.execute(sql,
-        {
-            ['@identifier'] = ecoCargo.owner.identifier,
-            ['@started_delivery'] = isMission and 0 or 1,
-            ['@started_mission'] = isMission and 1 or 0,
-            ['@vulnerable'] = isVulnerable and 1 or 0,
-        }, function(rowsChanged)
-
-            print("STAT INSERT OK", rowsChanged)
-        end)
+    MySQL.update(sql, {
+        ['@identifier'] = ecoCargo.owner.identifier,
+        ['@started_delivery'] = isMission and 0 or 1,
+        ['@started_mission'] = isMission and 1 or 0,
+        ['@vulnerable'] = isVulnerable and 1 or 0,
+    })
 
     TriggerClientEvent('eco_cargo:productUpdate', -1, {
         productId = ecoCargo.productId,
@@ -375,8 +337,7 @@ AddEventHandler('eco_cargo:cargoRegister', function(ecoCargo)
     })
 end)
 
-RegisterNetEvent('eco_cargo:cargoUpdate')
-AddEventHandler('eco_cargo:cargoUpdate', function(ecoCargo)
+RegisterNetEvent('eco_cargo:cargoUpdate', function(ecoCargo)
 
     local plate = safePlate(ecoCargo.trailerPlate)
 
@@ -385,247 +346,269 @@ AddEventHandler('eco_cargo:cargoUpdate', function(ecoCargo)
     table.refresh(ECO.CARGO[plate], ecoCargo)
 end)
 
-RegisterNetEvent('eco_cargo:deleteCargo')
-AddEventHandler('eco_cargo:deleteCargo', function(plate, state)
+RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
 
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
-
     local identifier = xPlayer.identifier
 
-    if ECO.CARGO[plate] then
+    if not ECO.CARGO[plate] then return end
 
-        local isMission
-        local increaseDoneDelivery, increaseDoneMission = 1, 1
-        local quality = 0
-        local defenders = {}
-        local ecoCargo = ECO.CARGO[plate]
-        local stolen = not (ecoCargo.owner.identifier == identifier)
+    local isMission
+    local increaseDoneDelivery, increaseDoneMission = 1, 1
+    local quality = 0
+    local defenders = {}
+    local ecoCargo = ECO.CARGO[plate]
+    local stolen = not (ecoCargo.owner.identifier == identifier)
 
-        TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, plate, false)
+    TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, plate, false)
 
-        -- DELETE MISSION DATA
-        local missionId = concatId(ecoCargo.loadingZoneId, ecoCargo.productId, '_')
+    -- DELETE MISSION DATA
+    local missionId = concatId(ecoCargo.loadingZoneId, ecoCargo.productId, '_')
 
-        if ECO.MISSION[missionId] and ECO.MISSION[missionId].trailerPlate == plate then
+    if ECO.MISSION[missionId] and ECO.MISSION[missionId].trailerPlate == plate then
 
-            isMission = true
-            defenders = ECO.MISSION[missionId].joined
-            TriggerEvent('eco_cargo:missionUpdate', { missionId = missionId }, 'delete')
-        end
-
-
-        local params = ecoCargo.params
-
-        if params.extraStatDeliveryPoint and type(params.extraStatDeliveryPoint) == 'number' then
-
-            increaseDoneDelivery = increaseDoneDelivery + params.extraStatDeliveryPoint
-        end
-
-        if params.extraStatQualityMultiplier and type(params.extraStatQualityMultiplier) == 'number' then
-
-            quality = ecoCargo.quality * params.extraStatQualityMultiplier
-        end
-
-        if isMission then
-
-            quality = ecoCargo.quality * 2
-            increaseDoneMission = 2
-        end
-
-        local sql = [[
-            INSERT INTO `eco_cargo_stats`
-            (
-                `identifier`,
-                `distance`,
-                `goods_quality`,
-                `done_delivery`,
-                `done_mission`,
-                `stolen_delivery`,
-                `stolen_mission`,
-                `destroyed_trailer`,
-                `working_time`,
-                `last_activity`
-            ) VALUES (
-                @identifier,
-                @distance,
-                @goods_quality,
-                @done_delivery,
-                @done_mission,
-                @stolen_delivery,
-                @stolen_mission,
-                @destroyed_trailer,
-                @working_time,
-                current_timestamp()
-                )
-                ON DUPLICATE KEY UPDATE
-                `distance` = `distance` + @distance,
-                `done_delivery` = IF(`started_delivery` >= `done_delivery` + @done_delivery, `done_delivery` + @done_delivery, `started_delivery`),
-                `done_mission` = IF(`started_mission` >= `done_mission` + @done_mission, `done_mission` + @done_mission, `started_mission`),
-                `goods_quality` = IF(`goods_quality` + @goods_quality > (`done_delivery` + `done_mission`) * 100,
-                (`done_delivery` + `done_mission`) * 100, `goods_quality` + @goods_quality),
-                `stolen_delivery` = `stolen_delivery` + @stolen_delivery,
-                `stolen_mission` = `stolen_mission` + @stolen_mission,
-                `destroyed_trailer` = `destroyed_trailer` + @destroyed_trailer,
-                `working_time` = `working_time` + @working_time,
-                `last_activity` = current_timestamp()
-            ]]
-
-        MySQL.Async.execute(sql,
-            {
-                ['@identifier'] = identifier,
-                ['@distance'] = (not stolen and state ~= 'DESTROYED') and ecoCargo.km or 0,
-                ['@goods_quality'] = (not stolen and state ~= 'DESTROYED') and quality or 0,
-                ['@done_delivery'] = (not isMission and not stolen and state ~= 'DESTROYED') and increaseDoneDelivery or 0, -- if set extraStatDeliveryPoint then improves bad statistics
-                ['@done_mission'] = (isMission and not stolen and state ~= 'DESTROYED') and increaseDoneMission or 0, -- DEFAULT: 1 (if 2 then improves bad statistics)
-                ['@stolen_delivery'] = (not isMission and stolen and state ~= 'DESTROYED') and 1 or 0,
-                ['@stolen_mission'] = (isMission and stolen and state ~= 'DESTROYED') and 1 or 0,
-                ['@destroyed_trailer'] = state == 'DESTROYED' and 1 or 0,
-                ['@working_time'] = not stolen and (os.time() - ecoCargo.startDelivery) or 0,
-            }, function(rowsChanged)
-
-                print("STAT FINISH INSERT OK", rowsChanged)
-            end)
-
-
-        if next(defenders) ~= nil and not stolen and state ~= 'DESTROYED' then
-
-            for i = 1, #defenders do
-
-                local sql = [[
-                    INSERT INTO `eco_cargo_stats`
-                    (
-                        `identifier`,
-                        `defender`,
-                        `last_activity`
-                    ) VALUES (
-                        @identifier,
-                        @defender,
-                        current_timestamp()
-                        )
-                        ON DUPLICATE KEY UPDATE
-                        `defender` = `defender` + @defender,
-                        `last_activity` = current_timestamp()
-                    ]]
-
-                MySQL.Async.execute(sql,
-                    {
-                        ['@identifier'] = defenders[i],
-                        ['@defender'] = 1,
-                    }, function(rowsChanged)
-
-                        print("STAT DEFENDERS INSERT OK", rowsChanged, defenders[i])
-                    end)
-            end
-        end
-
-        ECO.CARGO[plate] = nil
+        isMission = true
+        defenders = ECO.MISSION[missionId].joined
+        TriggerEvent('eco_cargo:missionUpdate', { missionId = missionId }, 'delete')
     end
+
+    local params = ecoCargo.params
+
+    if params.extraStatDeliveryPoint and type(params.extraStatDeliveryPoint) == 'number' then
+        increaseDoneDelivery = increaseDoneDelivery + params.extraStatDeliveryPoint
+    end
+
+    if params.extraStatQualityMultiplier and type(params.extraStatQualityMultiplier) == 'number' then
+        quality = ecoCargo.quality * params.extraStatQualityMultiplier
+    end
+
+    if isMission then
+        quality = ecoCargo.quality * 2
+        increaseDoneMission = 2
+    end
+
+    local sql = [[
+        INSERT INTO `eco_cargo_stats`
+        (
+            `identifier`,
+            `distance`,
+            `goods_quality`,
+            `done_delivery`,
+            `done_mission`,
+            `stolen_delivery`,
+            `stolen_mission`,
+            `destroyed_trailer`,
+            `working_time`,
+            `last_activity`
+        ) VALUES (
+            @identifier,
+            @distance,
+            @goods_quality,
+            @done_delivery,
+            @done_mission,
+            @stolen_delivery,
+            @stolen_mission,
+            @destroyed_trailer,
+            @working_time,
+            current_timestamp()
+        )
+        ON DUPLICATE KEY UPDATE
+            `distance` = `distance` + @distance,
+            `done_delivery` = IF(`started_delivery` >= `done_delivery` + @done_delivery, `done_delivery` + @done_delivery, `started_delivery`),
+            `done_mission` = IF(`started_mission` >= `done_mission` + @done_mission, `done_mission` + @done_mission, `started_mission`),
+            `goods_quality` = IF(`goods_quality` + @goods_quality > (`done_delivery` + `done_mission`) * 100,
+            (`done_delivery` + `done_mission`) * 100, `goods_quality` + @goods_quality),
+            `stolen_delivery` = `stolen_delivery` + @stolen_delivery,
+            `stolen_mission` = `stolen_mission` + @stolen_mission,
+            `destroyed_trailer` = `destroyed_trailer` + @destroyed_trailer,
+            `working_time` = `working_time` + @working_time,
+            `last_activity` = current_timestamp()
+    ]]
+
+    MySQL.update(sql, {
+        ['@identifier'] = identifier,
+        ['@distance'] = (not stolen and state ~= 'DESTROYED') and ecoCargo.km or 0,
+        ['@goods_quality'] = (not stolen and state ~= 'DESTROYED') and quality or 0,
+        ['@done_delivery'] = (not isMission and not stolen and state ~= 'DESTROYED') and increaseDoneDelivery or 0,
+        ['@done_mission'] = (isMission and not stolen and state ~= 'DESTROYED') and increaseDoneMission or 0,
+        ['@stolen_delivery'] = (not isMission and stolen and state ~= 'DESTROYED') and 1 or 0,
+        ['@stolen_mission'] = (isMission and stolen and state ~= 'DESTROYED') and 1 or 0,
+        ['@destroyed_trailer'] = state == 'DESTROYED' and 1 or 0,
+        ['@working_time'] = not stolen and (os.time() - ecoCargo.startDelivery) or 0,
+    })
+
+    -- Update defender stats
+    if next(defenders) ~= nil and not stolen and state ~= 'DESTROYED' then
+
+        local defenderSql = [[
+            INSERT INTO `eco_cargo_stats`
+            (`identifier`, `defender`, `last_activity`)
+            VALUES (@identifier, @defender, current_timestamp())
+            ON DUPLICATE KEY UPDATE
+                `defender` = `defender` + @defender,
+                `last_activity` = current_timestamp()
+        ]]
+
+        for i = 1, #defenders do
+            MySQL.update(defenderSql, {
+                ['@identifier'] = defenders[i],
+                ['@defender'] = 1,
+            })
+        end
+    end
+
+    ECO.CARGO[plate] = nil
 end)
 
-RegisterNetEvent('eco_cargo:changeMonitorOwner')
-AddEventHandler('eco_cargo:changeMonitorOwner', function(oldOwner, plate)
+RegisterNetEvent('eco_cargo:changeMonitorOwner', function(oldOwner, plate)
 
     local _source = source
 
-    ECO.CARGO[plate].monitorOwner = _source
-    TriggerClientEvent('eco_cargo:changeMonitorOwner', oldOwner, plate, _source)
+    if ECO.CARGO[plate] then
+        ECO.CARGO[plate].monitorOwner = _source
+        TriggerClientEvent('eco_cargo:changeMonitorOwner', oldOwner, plate, _source)
+    end
 end)
 
-RegisterNetEvent('eco_cargo:addMoney')
-AddEventHandler('eco_cargo:addMoney', function(amount, moneyType)
+-- ============================================================
+-- SECURE PAYMENT (server-side calculation)
+-- ============================================================
+
+RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
 
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
 
-    if moneyType == 'black_money' or moneyType == 'bank' then
+    if not xPlayer then return end
 
-        xPlayer.addAccountMoney(moneyType, amount)
-    else
+    plate = safePlate(plate)
 
-        xPlayer.addMoney(amount)
+    if not ECO.CARGO[plate] then return end
+
+    local ecoCargo = ECO.CARGO[plate]
+    local identifier = xPlayer.identifier
+    local stolen = not (ecoCargo.owner.identifier == identifier)
+
+    -- Server-side payment calculation
+    local propertyNames = {}
+    local product = ECO.PRODUCTS[tonumber(ecoCargo.productId)]
+
+    if product and product.properties and product.properties ~= '' then
+        propertyNames = json.decode(product.properties) or {}
     end
 
-    TriggerClientEvent('eco_cargo:showNotification', _source, {
-        type = 'money',
-        text = _('add_money', amount, _(moneyType))
+    local priceData = calculatePrice(propertyNames, ecoCargo.km, product)
+
+    local paymentData = payData({
+        freightFee = priceData.freightFee,
+        illegalPrice = priceData.illegalPrice,
+        trailerHealth = ecoCargo.trailerHealth or 1000,
+        quality = ecoCargo.quality or 100,
+        stolen = stolen,
+        cautionMoney = ecoCargo.cautionMoney or 0,
+        product = product
     })
+
+    local amount = tonumber(paymentData.payable) or 0
+    local societyAmount = tonumber(paymentData.defenderSocietyPayable) or 0
+    local moneyType = stolen and Config.stolenCargoPaymentType or 'money'
+
+    -- Pay the player
+    if amount > 0 then
+        if moneyType == 'black_money' or moneyType == 'bank' then
+            xPlayer.addAccountMoney(moneyType, amount)
+        else
+            xPlayer.addMoney(amount)
+        end
+
+        TriggerClientEvent('eco_cargo:showNotification', _source, {
+            type = 'money',
+            text = _('add_money', amount, _(moneyType))
+        })
+    end
+
+    -- Pay society
+    if societyAmount > 0 and product.defender and product.defender ~= '' then
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_' .. product.defender, function(account)
+            if account then
+                account.addMoney(societyAmount)
+            end
+        end)
+
+        TriggerClientEvent('eco_cargo:missionNotification', -1, {
+            defender = product.defender,
+            type = 'money',
+            text = _('add_society_money', _(product.defender), societyAmount)
+        })
+    end
+
+    -- Return payment data to client for report display
+    TriggerClientEvent('eco_cargo:paymentProcessed', _source, paymentData)
 end)
 
-RegisterNetEvent('eco_cargo:societyAddMoney')
-AddEventHandler('eco_cargo:societyAddMoney', function(amount, society)
-
-    TriggerEvent('esx_addonaccount:getSharedAccount', 'society_' .. society, function(account)
-
-        account.addMoney(amount)
-    end)
-
-    TriggerClientEvent('eco_cargo:missionNotification', -1, {
-        defender = society,
-        type = 'money',
-        text = _('add_society_money', _(society), amount)
-    })
+-- DEPRECATED: Legacy event handlers (kept for backward compatibility warnings)
+RegisterNetEvent('eco_cargo:addMoney', function()
+    print('[ECO CARGO WARNING] eco_cargo:addMoney called directly - this is deprecated and insecure!')
 end)
 
-RegisterNetEvent('eco_cargo:removeMoney')
-AddEventHandler('eco_cargo:removeMoney', function(amount)
+RegisterNetEvent('eco_cargo:societyAddMoney', function()
+    print('[ECO CARGO WARNING] eco_cargo:societyAddMoney called directly - this is deprecated!')
+end)
 
+RegisterNetEvent('eco_cargo:removeMoney', function(amount)
     local _source = source
-
     removeMoney(_source, amount)
 end)
 
--- MISSION
-RegisterNetEvent('eco_cargo:missionUpdate')
-AddEventHandler('eco_cargo:missionUpdate', function(data, subject)
+-- ============================================================
+-- MISSION EVENTS
+-- ============================================================
+
+RegisterNetEvent('eco_cargo:missionUpdate', function(data, subject)
 
     local currentMission = ECO.MISSION[data.missionId]
 
-    if currentMission then
+    if not currentMission then return end
 
-        if subject == 'leave' then
+    if subject == 'leave' then
 
-            for i = 1, #currentMission.joined do
-
-                if currentMission.joined[i] == data.player.identifier then
-
-                    table.remove(currentMission.joined, i)
-                end
+        for i = 1, #currentMission.joined do
+            if currentMission.joined[i] == data.player.identifier then
+                table.remove(currentMission.joined, i)
+                break
             end
-
-            data.type = 'warning'
-            data.text = _('defender_left', data.player.characterName, data.player.job.grade_label)
-
-            TriggerClientEvent('eco_cargo:missionNotification', -1, data)
-
-        elseif subject == 'join' then
-
-            table.insert(currentMission.joined, data.player.identifier)
-
-            data.type = 'information'
-            data.text = _('defender_joined', data.player.characterName, data.player.job.grade_label)
-
-            TriggerClientEvent('eco_cargo:missionNotification', -1, data)
-
-        elseif subject == 'delete' then
-
-            data.owner = currentMission.owner
-            data.defender = currentMission.defender
-            data.type = 'warning'
-            data.text = _('mission_is_over')
-
-            TriggerClientEvent('eco_cargo:missionNotification', -1, data)
-            TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, currentMission.plate, false)
-
-            ECO.MISSION[data.missionId] = nil
         end
 
-        TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
+        data.type = 'warning'
+        data.text = _('defender_left', data.player.characterName, data.player.job.grade_label)
+        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+
+    elseif subject == 'join' then
+
+        table.insert(currentMission.joined, data.player.identifier)
+
+        data.type = 'information'
+        data.text = _('defender_joined', data.player.characterName, data.player.job.grade_label)
+        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+
+    elseif subject == 'delete' then
+
+        data.owner = currentMission.owner
+        data.defender = currentMission.defender
+        data.type = 'warning'
+        data.text = _('mission_is_over')
+
+        TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+        TriggerClientEvent('eco_cargo:trailerSignal', -1, {}, currentMission.plate, false)
+
+        ECO.MISSION[data.missionId] = nil
     end
+
+    TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
 end)
 
-RegisterNetEvent('eco_cargo:missionRegister')
-AddEventHandler('eco_cargo:missionRegister', function(data)
+RegisterNetEvent('eco_cargo:missionRegister', function(data)
 
     local missionId = data.missionId
 
@@ -641,7 +624,6 @@ AddEventHandler('eco_cargo:missionRegister', function(data)
         TriggerClientEvent('eco_cargo:missionUpdate', -1, ECO.MISSION)
     end
 
-
     -- BROADCAST
     data.showChat = true
     data.type = "information"
@@ -651,54 +633,44 @@ AddEventHandler('eco_cargo:missionRegister', function(data)
     TriggerClientEvent('eco_cargo:missionNotification', -1, data)
 end)
 
-RegisterNetEvent('eco_cargo:showCountingZone')
-AddEventHandler('eco_cargo:showCountingZone', function(coord)
-
+RegisterNetEvent('eco_cargo:showCountingZone', function(coord)
     TriggerClientEvent('eco_cargo:showCountingZone', -1, coord)
 end)
 
-RegisterServerEvent('eco_cargo:trailerSignal')
-AddEventHandler('eco_cargo:trailerSignal', function(coord, plate, state)
-
+RegisterNetEvent('eco_cargo:trailerSignal', function(coord, plate, state)
     TriggerClientEvent('eco_cargo:trailerSignal', -1, coord, plate, state)
 end)
 
-RegisterNetEvent('eco_cargo:updateDistance')
-AddEventHandler('eco_cargo:updateDistance', function(data)
+-- ============================================================
+-- DISTANCE MANAGEMENT
+-- ============================================================
+
+RegisterNetEvent('eco_cargo:updateDistance', function(data)
 
     for k, v in pairs(data) do
-
-        MySQL.Async.execute("INSERT INTO `eco_cargo_distances` (`id`, `air`, `route`) VALUES (@id, @air, @route) ON DUPLICATE KEY UPDATE `air` = @air, `route` = @route",
-
-            {
-                ['@id'] = k,
-                ['@air'] = v.air,
-                ['@route'] = v.route
-            }, function(rowsChanged)
-
-                print("DISTANCES INSERT OK", rowsChanged)
-            end)
+        MySQL.update(
+            "INSERT INTO `eco_cargo_distances` (`id`, `air`, `route`) VALUES (@id, @air, @route) ON DUPLICATE KEY UPDATE `air` = @air, `route` = @route",
+            { ['@id'] = k, ['@air'] = v.air, ['@route'] = v.route }
+        )
     end
 end)
 
-RegisterNetEvent('eco_cargo:deleteDistance')
-AddEventHandler('eco_cargo:deleteDistance', function(data)
+RegisterNetEvent('eco_cargo:deleteDistance', function(data)
 
     if type(data) == 'table' and next(data) then
-
-        MySQL.Async.execute("DELETE FROM `eco_cargo_distances` WHERE `id` IN (" .. table.concat(data, ', ') .. ")", {},
-
-            function(rowsChanged)
-
-                print("DISTANCES DELETE OK", rowsChanged)
-            end)
+        MySQL.update("DELETE FROM `eco_cargo_distances` WHERE `id` IN (" .. table.concat(data, ', ') .. ")", {})
     end
 end)
 
+-- ============================================================
+-- UTILITY FUNCTIONS
+-- ============================================================
 
 function removeMoney(_source, amount)
 
     local xPlayer = ESX.GetPlayerFromId(_source)
+
+    if not xPlayer then return end
 
     xPlayer.removeMoney(amount)
 
@@ -708,36 +680,22 @@ function removeMoney(_source, amount)
     })
 end
 
+-- ============================================================
+-- ADMIN COMMANDS
+-- ============================================================
 
---[[
-TriggerEvent('es:addGroupCommand', 'cargodiag', 'admin', function(source, args, user)
-
-    TriggerClientEvent('eco_cargo:cargoDiagnostics', source)
-    TriggerClientEvent('esx:showNotification', source, '~r~ECO CARGO:~s~ Diagnosztika')
-end, function(source, args, user)
-
-    TriggerClientEvent('chat:addMessage', source, { args = { "^1SYSTEM", "Ehhez nincs jogosultságod!" } })
-end, { help = "ECO CARGO diagnosztika" })
-]]
-
-
--- if not essentialmode:
 RegisterCommand("cargodiag", function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
 
-    if xPlayer then
+    if not xPlayer then return end
 
-        local group = xPlayer.getGroup()
+    local group = xPlayer.getGroup()
 
-        if group == 'admin' or group == 'superadmin' then
-
-            TriggerClientEvent('eco_cargo:cargoDiagnostics', source)
-            TriggerClientEvent('esx:showNotification', source, '~r~ECO CARGO:~s~ Diagnosztika')
-
-        else
-
-            TriggerClientEvent('chat:addMessage', source, { args = { "^1SYSTEM", "Ehhez nincs jogosultságod!" } })
-        end
+    if group == 'admin' or group == 'superadmin' then
+        TriggerClientEvent('eco_cargo:cargoDiagnostics', source)
+        TriggerClientEvent('esx:showNotification', source, '~r~ECO CARGO:~s~ Diagnosztika')
+    else
+        TriggerClientEvent('chat:addMessage', source, { args = { "^1SYSTEM", "Ehhez nincs jogosultságod!" } })
     end
 end)

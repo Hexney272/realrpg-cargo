@@ -1,25 +1,29 @@
---
--- Created by IntelliJ IDEA.
--- User: ekhion
--- Date: 2020. 12. 03.
--- Time: 12:12
---
+--[[
+    ECO Cargo - Calculator Module
+    Price calculation, payment logic, and parameter computation
+]]
 
-function calculatePrice(propertyNames, km, product)
+ECO = ECO or {}
+ECO.Calc = {}
+
+--- Calculate freight price based on distance, properties, and product value
+---@param propertyNames table|nil List of property names
+---@param km number Distance in kilometers
+---@param product table Product data with value and defender fields
+---@return table {freightFee, illegalPrice}
+function ECO.Calc.calculatePrice(propertyNames, km, product)
 
     local defender = product.defender
     local value = product.value
 
     if defender ~= '' then
-
         return {
             freightFee = value,
             illegalPrice = value,
         }
     end
 
-
-    --Defaults
+    -- Defaults
     km = km or 1
     local kilometerFee = Config.kilometerFee or 90
     local distanceMultiplier = Config.distanceMultiplier or 0.99
@@ -29,10 +33,8 @@ function calculatePrice(propertyNames, km, product)
     local maxPrice = freightFee * 2
     local illegalPrice = value
 
-
     if propertyNames and next(propertyNames) ~= nil then
 
-        --Price modifiers
         for i = 1, #propertyNames do
 
             local propertyName = propertyNames[i]
@@ -56,15 +58,17 @@ function calculatePrice(propertyNames, km, product)
     }
 end
 
-function payData(data)
+--- Calculate payment data for cargo delivery/theft
+---@param data table {freightFee, illegalPrice, trailerHealth, quality, stolen, cautionMoney, product}
+---@return table Payment breakdown
+function ECO.Calc.payData(data)
 
-    -- PAYMENT
-    local payData = {
+    local result = {
         -- GOODS
         priceDeduction = 0,
         pricePayment = 0,
 
-        -- TRIALER
+        -- TRAILER
         cautionDeduction = 0,
         cautionPayment = 0,
 
@@ -81,36 +85,35 @@ function payData(data)
     if data.stolen then
 
         if data.product.defender ~= '' then
-
             data.illegalPrice = data.illegalPrice * Config.stolenMissionPaymentMultiplier
         end
 
-        payData.pricePayment = math.round(data.illegalPrice * gDamage)
-        payData.priceDeduction = data.illegalPrice - payData.pricePayment
-
-        payData.payable = payData.pricePayment
+        result.pricePayment = math.round(data.illegalPrice * gDamage)
+        result.priceDeduction = data.illegalPrice - result.pricePayment
+        result.payable = result.pricePayment
     else
 
-        payData.cautionPayment = math.round(data.cautionMoney * (1 - tDamage))
-        payData.cautionDeduction = data.cautionMoney - payData.cautionPayment
+        result.cautionPayment = math.round(data.cautionMoney * (1 - tDamage))
+        result.cautionDeduction = data.cautionMoney - result.cautionPayment
 
-        payData.pricePayment = math.round(data.freightFee * gDamage)
-        payData.priceDeduction = data.freightFee - payData.pricePayment
+        result.pricePayment = math.round(data.freightFee * gDamage)
+        result.priceDeduction = data.freightFee - result.pricePayment
 
         if data.product.defender ~= '' then
-
-            payData.defenderSocietyPayable = math.round(payData.pricePayment * (Config.defenderSocietyPaymentPercent * 0.01))
+            result.defenderSocietyPayable = math.round(result.pricePayment * (Config.defenderSocietyPaymentPercent * 0.01))
         end
 
-        payData.payable = payData.pricePayment - payData.defenderSocietyPayable + payData.cautionPayment
+        result.payable = result.pricePayment - result.defenderSocietyPayable + result.cautionPayment
     end
 
-    return payData
+    return result
 end
 
-function calculateParams(propertyNames)
+--- Calculate monitoring parameters from property list
+---@param propertyNames table|nil List of property names
+---@return string JSON-encoded params table
+function ECO.Calc.calculateParams(propertyNames)
 
-    --Defaults
     local params = {
         rollMonitoringSpeed = 1000,
         overturn = 80,
@@ -149,6 +152,7 @@ function calculateParams(propertyNames)
     return json.encode(params)
 end
 
-
-
-
+-- Global aliases for backward compatibility
+calculatePrice = ECO.Calc.calculatePrice
+payData = ECO.Calc.payData
+calculateParams = ECO.Calc.calculateParams
