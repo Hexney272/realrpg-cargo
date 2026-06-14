@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `realrpg_cargo_vehicles` (
 
 CREATE TABLE IF NOT EXISTS `realrpg_cargo_contracts` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `company_id` INT(11) NOT NULL,
+  `company_id` INT(11) DEFAULT NULL,
   `product_id` INT(11) NOT NULL,
   `zone_from` INT(11) NOT NULL,
   `zone_to` INT(11) NOT NULL,
@@ -111,9 +111,7 @@ CREATE TABLE IF NOT EXISTS `realrpg_cargo_contracts` (
   `expires_at` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `company_id` (`company_id`),
-  KEY `status` (`status`),
-  CONSTRAINT `fk_contract_company` FOREIGN KEY (`company_id`)
-    REFERENCES `realrpg_cargo_companies` (`id`) ON DELETE CASCADE
+  KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================

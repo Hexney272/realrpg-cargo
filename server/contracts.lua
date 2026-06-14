@@ -20,7 +20,7 @@ local function generateContracts()
     -- Count existing available contracts
     local ok, existing = pcall(MySQL.query.await, [[
         SELECT COUNT(*) as cnt FROM `realrpg_cargo_contracts` 
-        WHERE `status` = 'available' AND `company_id` = 0
+        WHERE `status` = 'available' AND `company_id` IS NULL
     ]], {})
 
     if not ok then
@@ -106,7 +106,7 @@ local function generateContracts()
                 INSERT INTO `realrpg_cargo_contracts`
                 (`company_id`, `product_id`, `zone_from`, `zone_to`, `reward`, `bonus_reward`, 
                  `penalty`, `required_quality`, `deadline_hours`, `status`, `expires_at`)
-                VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, 'available', ?)
+                VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'available', ?)
             ]], { product.id, zoneFrom, zoneTo, reward, bonusReward, penalty, requiredQuality, deadline, expiresAt })
 
             if ok4 and insertId then
@@ -161,7 +161,7 @@ RegisterNetEvent('realrpg_cargo:contracts:getAvailable', function()
         LEFT JOIN `realrpg_cargo_products` p ON p.id = c.product_id
         LEFT JOIN `realrpg_cargo_zones` z1 ON z1.id = c.zone_from
         LEFT JOIN `realrpg_cargo_zones` z2 ON z2.id = c.zone_to
-        WHERE c.`status` = 'available' AND c.`company_id` = 0
+        WHERE c.`status` = 'available' AND c.`company_id` IS NULL
         ORDER BY c.`reward` DESC
     ]], {})
 
@@ -201,7 +201,7 @@ RegisterNetEvent('realrpg_cargo:contracts:accept', function(contractId)
     local ok2, affected = pcall(MySQL.update.await, [[
         UPDATE `realrpg_cargo_contracts` 
         SET `company_id` = ?, `status` = 'accepted', `accepted_at` = NOW(), `assigned_driver` = ?
-        WHERE `id` = ? AND `status` = 'available' AND `company_id` = 0
+        WHERE `id` = ? AND `status` = 'available' AND `company_id` IS NULL
     ]], { companyId, identifier, contractId })
 
     if not ok2 then
