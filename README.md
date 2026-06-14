@@ -1,6 +1,6 @@
-# ECO CARGO 
+# REALRPG CARGO
 
-:pencil2: Tutya Discord elérhetősége (fejlesztő): HipnotikusAvasSzalonna#3252
+:pencil2: VeZse Discord elérhetősége (fejlesztő): hekii#72
 
 - 2021.06.27. server/main.lua kezeli a license id-t is + cargodiag parancs átírva, hogy essentialmode nélkül is működjön(es:addGroupCommand helyett RegisterCommand)
 
