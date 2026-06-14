@@ -84,6 +84,49 @@ Config.lawEnforcementFactions = {
     'sahp'
 }
 
+-- ============================================================
+-- FACTION ROLES (Multiple attacker & defender groups)
+-- ============================================================
+-- Defenders: factions that can protect high-value shipments
+-- Attackers: factions that can steal/intercept shipments
+-- These lists are used by the mission system to determine:
+--   1. Who gets notified when a mission is registered
+--   2. Who counts as "counter" players for mission balance
+-- You can add as many factions as you want to each list.
+
+Config.defenderFactions = {
+    'police',
+    'sheriff',
+    'nexa',
+    'lspd',
+    'sahp',
+}
+
+Config.attackerFactions = {
+    'vagos',
+    'ballas',
+    'crips',
+    'bloods',
+    'family',
+    'yakuza',
+    'lostmc',
+    'cayoperico',
+    'cardem',
+    'triad',
+    'camorra',
+    'cosanostra',
+    'lafamily',
+    'calicartel',
+    'alsalam',
+    'bratstvo',
+    'ms12',
+    'blackkings',
+    'goonsquad',
+    'carteldesinaloa',
+    'crimson',
+    'families',
+}
+
 -- TACHOGRAF
 Config.speedLimit = {
     country = 90,

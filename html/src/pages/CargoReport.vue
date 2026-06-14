@@ -2,7 +2,7 @@
   <div class="cargo-report" v-if="report">
     <table class="report-table">
       <!-- Sender / Destination -->
-      <tr class="tr-hl"><td>Megrendelo:</td><td>Celallomas:</td></tr>
+      <tr class="tr-hl"><td>Megrendelő:</td><td>Célállomás:</td></tr>
       <tr>
         <td>
           <span class="big">{{ report.loadingZone?.name }}</span>
@@ -17,14 +17,14 @@
       </tr>
 
       <!-- Driver -->
-      <tr class="tr-hl"><td colspan="2">Fuvarozo:</td></tr>
+      <tr class="tr-hl"><td colspan="2">Fuvarozó:</td></tr>
       <tr>
         <td>{{ report.owner?.characterName }}</td>
-        <td>Maganvallalkozo</td>
+        <td>Magánvállalkozó</td>
       </tr>
 
       <!-- Product -->
-      <tr class="tr-hl"><td>Aru megnevezese:</td><td>Tavolsag:</td></tr>
+      <tr class="tr-hl"><td>Árú megnevezése:</td><td>Távolság:</td></tr>
       <tr>
         <td>
           <span class="big">{{ report.product?.name }}</span>
@@ -40,35 +40,35 @@
           <table v-if="!report.stolen" class="payment-table tbl-theme1">
             <thead>
               <tr>
-                <th class="left">Tetel</th>
-                <th>Osszeg</th>
-                <th>Allapot</th>
-                <th>Levonas</th>
-                <th>Kifizetes</th>
+                <th class="left">Tétel</th>
+                <th>Összeg</th>
+                <th>Állapot</th>
+                <th>Levonás</th>
+                <th>Kifizetés</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="left">Fuvardij</td>
+                <td class="left">Fuvardíj</td>
                 <td>{{ money(report.payData?.freightFee) }}</td>
                 <td>(rakomany) {{ Math.round(report.quality) }} %</td>
                 <td>{{ money(report.payData?.priceDeduction) }}</td>
                 <td>{{ money(report.payData?.pricePayment) }}</td>
               </tr>
               <tr>
-                <td class="left">Kaucio</td>
+                <td class="left">Kaució</td>
                 <td>{{ money(report.cautionMoney) }}</td>
                 <td>(trailer) {{ Math.round(report.trailerHealth * 0.1) }} %</td>
                 <td>{{ money(report.payData?.cautionDeduction) }}</td>
                 <td>{{ money(report.payData?.cautionPayment) }}</td>
               </tr>
               <tr class="tr-h4">
-                <td class="left">Osszesen</td>
+                <td class="left">Összesen</td>
                 <td></td><td></td><td></td>
                 <td class="payable">{{ money(report.payData?.payable) }}</td>
               </tr>
               <tr v-if="report.payData?.defenderSocietyPayable > 0" class="tr-h4">
-                <td class="left">Vedo frakcio</td>
+                <td class="left">Védő frakció</td>
                 <td></td><td></td><td></td>
                 <td>{{ money(report.payData.defenderSocietyPayable) }}</td>
               </tr>
@@ -79,16 +79,16 @@
           <table v-else class="payment-table tbl-theme2">
             <thead>
               <tr>
-                <th class="left">Tetel</th>
-                <th>Teljes ertek</th>
-                <th>Allapot</th>
-                <th>Levonas</th>
-                <th>Kifizetes</th>
+                <th class="left">Tétel</th>
+                <th>Teljes érték</th>
+                <th>Állapot</th>
+                <th>Levonás</th>
+                <th>Kifizetés</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="left">Aru</td>
+                <td class="left">Árú</td>
                 <td>{{ money(report.illegalPrice) }}</td>
                 <td>(rakomany) {{ Math.round(report.quality) }} %</td>
                 <td>{{ money(report.payData?.priceDeduction) }}</td>
@@ -100,32 +100,32 @@
       </tr>
 
       <!-- Vehicle -->
-      <tr class="tr-hl"><td colspan="2">Jarmu:</td></tr>
+      <tr class="tr-hl"><td colspan="2">Jármű:</td></tr>
       <tr>
         <td colspan="2">
           <div class="vehicle-grid">
             <div class="item-img" :style="{ backgroundImage: `url('img/${report.product?.trailer}.jpg')` }"></div>
             <div class="vehicle-info">
               <div class="vehicle-row">
-                <span>Rendszam</span>
+                <span>Rendszám</span>
                 <span class="right">{{ report.trailerPlate }}</span>
               </div>
               <div class="vehicle-row">
-                <span>Allapot (trailer)</span>
+                <span>Állapot (trailer)</span>
                 <span class="right">{{ Math.round(report.trailerHealth * 0.1) }} %</span>
               </div>
               <div class="vehicle-row">
-                <span>Allapot (rakomany)</span>
+                <span>Állapot (rakomány)</span>
                 <span class="right">{{ Math.round(report.quality) }} %</span>
               </div>
             </div>
             <div class="vehicle-info">
               <div class="vehicle-row">
-                <span>Max sebesseg (Varos)</span>
+                <span>Max sebesség (Város)</span>
                 <span class="right">{{ report.maxSpeed?.city || 0 }} Km/h</span>
               </div>
               <div class="vehicle-row">
-                <span>Max sebesseg (Videk)</span>
+                <span>Max sebesség (Vidék)</span>
                 <span class="right">{{ report.maxSpeed?.country || 0 }} Km/h</span>
               </div>
             </div>

@@ -21,13 +21,11 @@ RegisterNUICallback('missionRegister', function(data, cb)
             local counterFactions = {}
             local counters = 0
 
-            -- calc counters
-            if in_table(data.defender, Config.lawEnforcementFactions) then
-
-                counterFactions = Config.illegalFactions
+            -- Use new multi-faction config (with fallback to legacy)
+            if in_table(data.defender, Config.defenderFactions or Config.lawEnforcementFactions) then
+                counterFactions = Config.attackerFactions or Config.illegalFactions
             else
-
-                counterFactions = Config.lawEnforcementFactions
+                counterFactions = Config.defenderFactions or Config.lawEnforcementFactions
             end
 
 

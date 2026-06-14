@@ -19,22 +19,22 @@
               <td width="120">Start:</td>
               <td>
                 <span>{{ mission.loadingZone?.address }}</span>
-                <button class="btn2 right" @click="setWaypoint(key)">Rakodasi hely</button>
+                <button class="btn2 right" @click="setWaypoint(key)">Rakodási hely</button>
               </td>
             </tr>
             <tr>
-              <td>Inditotta:</td>
+              <td>Indította:</td>
               <td>
                 <span>{{ getOwnerDisplay(mission) }}</span>
                 <button
                   v-if="canShowDestination(key, mission)"
                   class="btn2 right"
                   @click="setDestinationWaypoint(key)"
-                >Celallomas hely</button>
+                >Célállomás hely</button>
               </td>
             </tr>
             <tr>
-              <td>Vedok:</td>
+              <td>Védők:</td>
               <td>
                 <span>{{ getDefenderDisplay(mission) }}</span>
                 (<span>{{ getJoinedDisplay(mission) }}</span> fo)
@@ -48,19 +48,19 @@
               v-if="canJoin(key, mission)"
               class="btn right"
               @click="joinMission(key, mission)"
-            >Csatlakozas</button>
+            >Csatlakozás</button>
 
             <button
               v-if="canLeave(key, mission)"
               class="btn3 right"
               @click="leaveMission(key, mission)"
-            >Kilepes</button>
+            >Kilépés</button>
 
             <button
               v-if="canDelete(mission)"
               class="btn3 right"
               @click="deleteMission(key, mission)"
-            >Kuldetes torlese</button>
+            >Küldetés törlése</button>
           </div>
         </div>
       </div>
@@ -107,7 +107,7 @@ function isConfidential(mission) {
 }
 
 function getOwnerDisplay(mission) {
-  return isConfidential(mission) ? mission.owner?.characterName : 'Bizalmas informacio'
+  return isConfidential(mission) ? mission.owner?.characterName : 'Bizalmas információ'
 }
 
 function getDefenderDisplay(mission) {

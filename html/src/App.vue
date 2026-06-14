@@ -10,8 +10,8 @@
   <transition name="page-fade">
     <div v-if="currentPage" class="pageWrapper" @keyup.esc="closePage">
       <header class="header">
-        <h1>ECO CARGO</h1>
-        <button class="btnClose" @click="closePage">Bezar</button>
+        <h1>RealRPG Cargo</h1>
+        <button class="btnClose" @click="closePage">Bezárás</button>
       </header>
 
       <div class="titleContainer" v-if="pageTitle">
@@ -90,11 +90,11 @@ useNui().onMessage((event) => {
       break
 
     case 'CARGO_REPORT':
-      openPage('CARGO_REPORT', item.data, 'Szallitoevel', '')
+      openPage('CARGO_REPORT', item.data, 'Szállítólevél', '')
       break
 
     case 'MISSION_LIST':
-      openPage('MISSION_LIST', { mission: item.mission, player: item.player }, 'Kuldetes lista', 'Csatlakozhatsz vedonek, jelolheted a rakodasi hely es a celallomas pontokat.')
+      openPage('MISSION_LIST', { mission: item.mission, player: item.player }, 'Küldetés lista', 'Csatlakozhatsz védőnek, jelölheted a rakodási hely és a célállomás pontokat.')
       break
 
     case 'STATISTICS':

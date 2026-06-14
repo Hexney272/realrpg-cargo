@@ -4,7 +4,10 @@
       <!-- Header -->
       <div class="cargo-header">
         <div class="icons">
-          <img v-for="prop in getProperties(cargo)" :key="prop" :src="`img/${prop}.png`" class="property-icon" />
+          <div v-for="prop in getProperties(cargo)" :key="prop" class="property-icon-wrapper">
+            <img :src="`img/${prop}.png`" class="property-icon" />
+            <span class="property-tooltip">{{ getPropertyLabel(prop) }}</span>
+          </div>
         </div>
         <h2 :class="['item-header', { disabled: isUnavailable(cargo) }]">{{ cargo.label }}</h2>
       </div>
@@ -12,7 +15,7 @@
       <!-- Content -->
       <div class="cargo-data">
         <div class="item-img" :style="{ backgroundImage: `url('img/${cargo.trailer}.jpg')` }">
-          <span v-if="isUnavailable(cargo)" class="available-alert no-available">
+      <span v-if="isUnavailable(cargo)" class="available-alert no-available">
             {{ getUnavailableText(cargo) }}
           </span>
         </div>
@@ -33,7 +36,7 @@
                 <span class="cargo-name">{{ dZone.name }}</span>
                 <span class="cargo-description small">{{ dZone.description }}</span>
               </td>
-              <td width="80" align="center">Kaucio: <span>{{ formatMoney(cargo.caution_money) }}</span></td>
+          <td width="80" align="center">Kaució: <span>{{ formatMoney(cargo.caution_money) }}</span></td>
               <td width="120" align="center"><span class="cargo-defenders-cell"></span></td>
               <td width="70"><span class="cargo-distance">{{ dZone.distance }} Km</span></td>
               <td width="80"><span class="freight-fee">{{ formatMoney(dZone.priceData.freightFee) }}</span></td>
@@ -54,13 +57,13 @@
               v-if="showSubmitBtn(cargo)"
               class="btn submit-btn"
               @click="submitCargo(cargo)"
-            >Kaucio befizetese es indulas!</button>
+            >Kaució befizetése és indulás!</button>
 
             <button
               v-if="showMissionBtn(cargo)"
               class="btn mission-register-btn"
               @click="registerMission(cargo)"
-            >Vedokiseret hivasa!</button>
+            >Védőkíséret hívása!</button>
           </div>
         </div>
       </div>
@@ -101,6 +104,26 @@ function getProperties(cargo) {
   return jsonParse(cargo.properties) || []
 }
 
+// Property name → Hungarian label for tooltips
+const propertyLabels = {
+  fragile: 'Törékeny',
+  explosive: 'Robbanásveszélyes',
+  flammable: 'Tűzveszélyes',
+  toxic: 'Mérgező',
+  corrodent: 'Maró',
+  pollutant: 'Szennyező',
+  heavy: 'Túlsúlyos',
+  refrigerate: 'Hűtendő',
+  high_value: 'Nagyértékű',
+  illegal: 'Illegális',
+  marked_on_the_map: 'Jelölt árú',
+  high_sensitivity: 'Magas érzékenység'
+}
+
+function getPropertyLabel(prop) {
+  return propertyLabels[prop] || prop
+}
+
 function isUnavailable(cargo) {
   const hasRemaining = cargo.remainingTime !== 0
   const playerInDefJob = player.value.job?.name === cargo.defender
@@ -109,7 +132,7 @@ function isUnavailable(cargo) {
 
 function getUnavailableText(cargo) {
   if (cargo.remainingTime !== 0) return cargo.remainingTimeDisplay || ''
-  return 'Vedokent nem indithato'
+  return 'Védőként nem indítható'
 }
 
 function getMissionInfo(cargo) {
@@ -228,6 +251,11 @@ function buildCargoData(cargo) {
   gap: 8px;
 }
 
+.property-icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .property-icon {
   width: 28px;
   height: 28px;
@@ -236,10 +264,46 @@ function buildCargoData(cargo) {
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: transform var(--transition-fast);
+  cursor: pointer;
 }
 
 .property-icon:hover {
   transform: scale(1.15);
+}
+
+.property-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: rgba(10, 10, 20, 0.95);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-text-accent);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.property-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-border-accent);
+}
+
+.property-icon-wrapper:hover .property-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
 }
 
 .item-header {

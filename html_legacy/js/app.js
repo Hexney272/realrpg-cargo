@@ -159,9 +159,9 @@ function openCargoSelect(shipments, currentZone, player, mission) {
             });
         }
 
-        if (cargo.defender !== '') {
+            if (cargo.defender !== '') {
             const defEl = $('.cargoDefenders', cargoItem);
-            if (defEl) defEl.innerHTML = `Vedelem:<br />(${cargo.required_defenders} fo) ${cargo.defenderLabel}`;
+            if (defEl) defEl.innerHTML = `Védelem:<br />(${cargo.required_defenders} fő) ${cargo.defenderLabel}`;
         }
 
         $('.itemImg', cargoItem).style.backgroundImage = `url('img/${cargo.trailer}.jpg')`;
