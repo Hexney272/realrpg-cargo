@@ -176,7 +176,7 @@ lib.callback.register('realrpg_cargo:company:create', function(source, data)
 
     if not success then
         print('[RealRPG Cargo] Company create error: ' .. tostring(result))
-        return { success = false, message = 'Szerver hiba! Ellenőrizd hogy a realrpg_cargo_company.sql importálva van-e.' }
+        return { success = false, message = 'Szerver hiba: ' .. tostring(result) }
     end
 
     return result
