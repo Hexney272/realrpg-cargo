@@ -1,18 +1,10 @@
 --[[
-    ECO Cargo - Calculator Module
+    RealRPG Cargo - Calculator Module
     Price calculation, payment logic, and parameter computation
+    SIMPLE GLOBAL FUNCTIONS
 ]]
 
-ECO = ECO or {}
-ECO.Calc = {}
-
---- Calculate freight price based on distance, properties, and product value
----@param propertyNames table|nil List of property names
----@param km number Distance in kilometers
----@param product table Product data with value and defender fields
----@return table {freightFee, illegalPrice}
-function ECO.Calc.calculatePrice(propertyNames, km, product)
-
+function calculatePrice(propertyNames, km, product)
     local defender = product.defender
     local value = product.value
 
@@ -23,26 +15,20 @@ function ECO.Calc.calculatePrice(propertyNames, km, product)
         }
     end
 
-    -- Defaults
     km = km or 1
-    local kilometerFee = Config.kilometerFee or 90
-    local distanceMultiplier = Config.distanceMultiplier or 0.99
-    local baseFee = Config.baseFee or 100
+    local kilometerFee = Config.kilometerFee or 2500
+    local distanceMultiplier = Config.distanceMultiplier or 0.995
+    local baseFee = Config.baseFee or 15000
 
     local freightFee = km * kilometerFee * (distanceMultiplier ^ km) + baseFee
     local maxPrice = freightFee * 2
     local illegalPrice = value
 
     if propertyNames and next(propertyNames) ~= nil then
-
         for i = 1, #propertyNames do
-
             local propertyName = propertyNames[i]
-
             if Config.propertyParams[propertyName] then
-
                 local propertyParams = Config.propertyParams[propertyName]
-
                 freightFee = freightFee + percentageValue((maxPrice - freightFee), propertyParams['priceMultiplier'])
                 illegalPrice = illegalPrice + percentageValue(value, propertyParams['illegalPriceMultiplier'])
             end
@@ -58,24 +44,14 @@ function ECO.Calc.calculatePrice(propertyNames, km, product)
     }
 end
 
---- Calculate payment data for cargo delivery/theft
----@param data table {freightFee, illegalPrice, trailerHealth, quality, stolen, cautionMoney, product}
----@return table Payment breakdown
-function ECO.Calc.payData(data)
-
+function payData(data)
     local result = {
-        -- GOODS
         priceDeduction = 0,
         pricePayment = 0,
-
-        -- TRAILER
         cautionDeduction = 0,
         cautionPayment = 0,
-
-        -- PAYABLE
         payable = 0,
         defenderSocietyPayable = 0,
-
         freightFee = data.freightFee
     }
 
@@ -83,7 +59,6 @@ function ECO.Calc.payData(data)
     local gDamage = data.quality * 0.01
 
     if data.stolen then
-
         if data.product.defender ~= '' then
             data.illegalPrice = data.illegalPrice * Config.stolenMissionPaymentMultiplier
         end
@@ -92,7 +67,6 @@ function ECO.Calc.payData(data)
         result.priceDeduction = data.illegalPrice - result.pricePayment
         result.payable = result.pricePayment
     else
-
         result.cautionPayment = math.round(data.cautionMoney * (1 - tDamage))
         result.cautionDeduction = data.cautionMoney - result.cautionPayment
 
@@ -109,11 +83,7 @@ function ECO.Calc.payData(data)
     return result
 end
 
---- Calculate monitoring parameters from property list
----@param propertyNames table|nil List of property names
----@return string JSON-encoded params table
-function ECO.Calc.calculateParams(propertyNames)
-
+function calculateParams(propertyNames)
     local params = {
         rollMonitoringSpeed = 1000,
         overturn = 80,
@@ -127,15 +97,10 @@ function ECO.Calc.calculateParams(propertyNames)
     }
 
     if propertyNames and next(propertyNames) ~= nil then
-
         for i = 1, #propertyNames do
-
             local propertyName = propertyNames[i]
-
             if Config.propertyParams[propertyName] then
-
                 local property = Config.propertyParams[propertyName]
-
                 setProperty(property, params, 'rollMonitoringSpeed', 'min')
                 setProperty(property, params, 'damageRoll', 'min')
                 setProperty(property, params, 'overturn', 'min')
@@ -151,8 +116,3 @@ function ECO.Calc.calculateParams(propertyNames)
 
     return json.encode(params)
 end
-
--- Global aliases for backward compatibility
-calculatePrice = ECO.Calc.calculatePrice
-payData = ECO.Calc.payData
-calculateParams = ECO.Calc.calculateParams

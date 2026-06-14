@@ -1,26 +1,20 @@
 --ESX = nil
 ECO = ECO or {}
-ECO.blips = {}
-ECO.zones = {}
-ECO.allZones = {}
-ECO.distances = {}
-ECO.loadingZones = {}
-ECO.targetZone = {}
-ECO.closestZones = {}
-ECO.allProducts = {}
-ECO.CARGO = {
-    interruption = true
-}
-ECO.MONITOR = {
-    queryStatus = {},
-    hasAlreadyNotify = {},
-    area = 'country'
-}
-ECO.LOADED = {}
-ECO.PLAYER = {}
-ECO.PLAYERS = {}
-ECO.MISSION = {}
-ECO.DIAGNOSTICS = {}
+ECO.blips = ECO.blips or {}
+ECO.zones = ECO.zones or {}
+ECO.allZones = ECO.allZones or {}
+ECO.distances = ECO.distances or {}
+ECO.loadingZones = ECO.loadingZones or {}
+ECO.targetZone = ECO.targetZone or {}
+ECO.closestZones = ECO.closestZones or {}
+ECO.allProducts = ECO.allProducts or {}
+ECO.CARGO = { interruption = true }
+ECO.MONITOR = { queryStatus = {}, hasAlreadyNotify = {}, area = 'country' }
+ECO.LOADED = ECO.LOADED or {}
+ECO.PLAYER = ECO.PLAYER or {}
+ECO.PLAYERS = ECO.PLAYERS or {}
+ECO.MISSION = ECO.MISSION or {}
+ECO.DIAGNOSTICS = ECO.DIAGNOSTICS or {}
 
 local selectCharacters
 

@@ -1,19 +1,15 @@
 --[[
-    ECO Cargo - HUD Module
+    RealRPG Cargo - HUD Module
     NUI communication, notifications, and HUD state management
+    
+    SIMPLE GLOBAL FUNCTIONS - no namespace to avoid nil reference issues in FiveM
 ]]
 
-ECO = ECO or {}
-ECO.Hud = {}
-
---- Update HUD state based on player/cargo context
-function ECO.Hud.update()
+function setHud()
 
     local presetName
 
-    -- HUD PRESET SELECT
     if ECO.PLAYER.isApprovedDriver then
-
         if ECO.MONITOR.towing then
             if ECO.targetZone[1] then
                 presetName = 'deliveryInformation'
@@ -27,7 +23,6 @@ function ECO.Hud.update()
         presetName = 'hide'
     end
 
-    -- HUD SETTINGS
     if ECO.MONITOR.hud == presetName then return end
 
     if presetName == 'deliveryInformation' then
@@ -58,7 +53,7 @@ function ECO.Hud.update()
     elseif presetName == 'notification' then
 
         SendNUIMessage({ subject = "CLOSE_INFO" })
-        ECO.Hud.notify("information", _('promotion_message'), 10000)
+        DoCustomHudText("information", _('promotion_message'), 10000)
 
     else
 
@@ -68,10 +63,7 @@ function ECO.Hud.update()
     ECO.MONITOR.hud = presetName
 end
 
---- Send live data update to HUD
----@param paramName string Parameter name to update
----@param value any New value
-function ECO.Hud.sendLiveData(paramName, value)
+function sendHudLiveData(paramName, value)
 
     if ECO.MONITOR.towing then
         SendNUIMessage({
@@ -82,10 +74,7 @@ function ECO.Hud.sendLiveData(paramName, value)
     end
 end
 
---- Send action data to HUD (marker enter/exit)
----@param actionData table Action data
----@param operation string 'append' or 'close'
-function ECO.Hud.sendActionData(actionData, operation)
+function sendHudActionData(actionData, operation)
 
     SendNUIMessage({
         subject = "ACTION_INFO",
@@ -94,12 +83,7 @@ function ECO.Hud.sendActionData(actionData, operation)
     })
 end
 
---- Show a custom notification on the HUD
----@param type string Notification type (information, fail, money, warning)
----@param text string Notification text
----@param length number|nil Display duration in ms
----@param style string|nil Custom style
-function ECO.Hud.notify(type, text, length, style)
+function DoCustomHudText(type, text, length, style)
 
     SendNUIMessage({
         type = type,
@@ -110,18 +94,12 @@ function ECO.Hud.notify(type, text, length, style)
     })
 end
 
--- Global aliases for backward compatibility
-setHud = ECO.Hud.update
-sendHudLiveData = ECO.Hud.sendLiveData
-sendHudActionData = ECO.Hud.sendActionData
-DoCustomHudText = ECO.Hud.notify
-
 -- ============================================================
 -- EVENT HANDLERS
 -- ============================================================
 
 RegisterNetEvent('realrpg_cargo:showNotification', function(data)
-    ECO.Hud.notify(data.type, data.text, data.length, data.style)
+    DoCustomHudText(data.type, data.text, data.length, data.style)
 end)
 
 RegisterNetEvent('realrpg_cargo:missionNotification', function(data)
@@ -130,31 +108,26 @@ RegisterNetEvent('realrpg_cargo:missionNotification', function(data)
 
         if (data.defender and data.defender == ECO.PLAYER.job.name) or (data.owner and data.owner.identifier == ECO.PLAYER.identifier) then
 
-            ECO.Hud.notify(data.type, data.text, data.length, data.style)
+            DoCustomHudText(data.type, data.text, data.length, data.style)
 
             if data.showChat then
-                TriggerEvent("chat:addMessage", { args = { "^1[ECO CARGO]", data.text } })
+                TriggerEvent("chat:addMessage", { args = { "^1[RealRPG Cargo]", data.text } })
             end
 
         elseif data.otherText then
-            TriggerEvent("chat:addMessage", { args = { "^1[ECO CARGO]", data.otherText } })
+            TriggerEvent("chat:addMessage", { args = { "^1[RealRPG Cargo]", data.otherText } })
         end
     end
 end)
-
 
 -- ============================================================
 -- ACHIEVEMENT NOTIFICATIONS
 -- ============================================================
 
 RegisterNetEvent('realrpg_cargo:achievementUnlocked', function(data)
-
-    -- Show a special achievement notification
     SendNUIMessage({
         subject = "ACHIEVEMENT",
         achievement = data
     })
-
-    -- Also show a standard notification
-    ECO.Hud.notify('success', '🏆 ' .. (_(data.name) or data.name), 8000)
+    DoCustomHudText('success', '🏆 ' .. (_(data.name) or data.name), 8000)
 end)

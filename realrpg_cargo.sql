@@ -556,3 +556,15 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- ============================================================
+-- CURRENCY CONVERSION: USD → HUF (Ft)
+-- Multiply all monetary values by 300 (approximate RP exchange rate)
+-- ============================================================
+
+UPDATE `realrpg_cargo_products` SET `caution_money` = 300000 WHERE `caution_money` = 1000;
+UPDATE `realrpg_cargo_products` SET `caution_money` = 500000 WHERE `caution_money` = 1010;
+UPDATE `realrpg_cargo_products` SET `caution_money` = 5000000 WHERE `caution_money` = 50000;
+UPDATE `realrpg_cargo_products` SET `caution_money` = 3000000 WHERE `caution_money` = 30000;
+UPDATE `realrpg_cargo_products` SET `value` = `value` * 300;
