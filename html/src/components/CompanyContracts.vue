@@ -1,40 +1,44 @@
 <template>
   <div class="contracts-panel">
     <div class="section-header">
-      <h3>Szerződések ({{ contracts.length }})</h3>
+      <h3>Elérhető szerződések ({{ contracts.length }})</h3>
+      <span class="section-hint">Más cégek is látják – aki előbb elfogadja, azé!</span>
     </div>
 
     <div v-if="!contracts.length" class="empty-state glass-card">
       <span class="material-icons">description</span>
-      <p>Jelenleg nincsenek elérhető szerződések.</p>
+      <p>Jelenleg nincsenek elérhető szerződések. Hamarosan generálódnak újak!</p>
     </div>
 
     <div class="contract-list">
-      <div v-for="contract in contracts" :key="contract.id" :class="['contract-card', 'glass-card', 'status-border-' + contract.status]">
+      <div v-for="contract in contracts" :key="contract.id" class="contract-card glass-card">
         <div class="contract-header">
-          <span :class="['contract-status', 'cs-' + contract.status]">{{ getStatusLabel(contract.status) }}</span>
+          <div class="contract-product">
+            <img v-if="contract.product_trailer" :src="`img/${contract.product_trailer}.jpg`" class="contract-img" />
+            <div>
+              <span class="contract-product-name">{{ contract.product_name }}</span>
+              <span class="contract-route-text">{{ contract.zone_from_name }} → {{ contract.zone_to_name }}</span>
+            </div>
+          </div>
           <span class="contract-reward">{{ formatMoney(contract.reward) }}</span>
         </div>
 
         <div class="contract-details">
-          <div class="contract-route">
-            <span class="material-icons">location_on</span>
-            <span>Zóna {{ contract.zone_from }} → Zóna {{ contract.zone_to }}</span>
-          </div>
           <div class="contract-meta">
             <span><span class="material-icons">timer</span> {{ contract.deadline_hours }}h határidő</span>
             <span><span class="material-icons">star</span> Min. {{ contract.required_quality }}% minőség</span>
             <span v-if="contract.bonus_reward"><span class="material-icons">emoji_events</span> Bónusz: {{ formatMoney(contract.bonus_reward) }}</span>
+            <span v-if="contract.penalty"><span class="material-icons">warning</span> Büntetés: {{ formatMoney(contract.penalty) }}</span>
+          </div>
+          <div v-if="contract.product_defender" class="contract-defender-badge">
+            <span class="material-icons">security</span> Védett rakomány (3x jutalom)
           </div>
         </div>
 
-        <div class="contract-actions" v-if="contract.status === 'available' && canAccept">
-          <button class="btn" @click="acceptContract(contract.id)">Elfogadás</button>
-        </div>
-
-        <div v-if="contract.status === 'completed'" class="contract-result">
-          <span class="material-icons">check_circle</span>
-          Teljesítve - Minőség: {{ contract.delivery_quality }}%
+        <div class="contract-actions">
+          <button class="btn btn-accept" @click="acceptContract(contract.id)">
+            <span class="material-icons">check</span> Elfogadás
+          </button>
         </div>
       </div>
     </div>
@@ -42,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useNui, MONEY } from '../composables/useNui'
 
 const props = defineProps({
@@ -50,29 +54,29 @@ const props = defineProps({
   myRole: { type: String, default: 'driver' }
 })
 
-const emit = defineEmits(['refresh'])
-const { post } = useNui()
-
-const canAccept = computed(() => ['owner', 'manager', 'dispatcher'].includes(props.myRole))
+const { post, onMessage } = useNui()
+const contracts = ref([])
 
 function formatMoney(val) { return MONEY.format(val || 0) }
 
-function getStatusLabel(status) {
-  const labels = {
-    available: 'Elérhető',
-    accepted: 'Elfogadva',
-    in_progress: 'Folyamatban',
-    completed: 'Teljesítve',
-    failed: 'Sikertelen',
-    expired: 'Lejárt'
-  }
-  return labels[status] || status
-}
-
 async function acceptContract(contractId) {
   await post('company_acceptContract', { contractId })
-  emit('refresh')
 }
+
+function loadContracts() {
+  post('company_getContracts', {})
+}
+
+// Listen for contracts data from server
+onMessage((event) => {
+  if (event.data && event.data.subject === 'COMPANY_CONTRACTS') {
+    contracts.value = event.data.data || []
+  }
+})
+
+onMounted(() => {
+  loadContracts()
+})
 </script>
 
 <style scoped>

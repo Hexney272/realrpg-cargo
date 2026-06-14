@@ -40,6 +40,7 @@ server_scripts {
     'server/discord.lua',
     'server/achievements.lua',
     'server/company.lua',
+    'server/contracts.lua',
     'server/main.lua',
 }
 

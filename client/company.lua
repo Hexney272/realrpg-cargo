@@ -110,16 +110,40 @@ RegisterNUICallback('company_sellVehicle', function(data, cb)
     cb(json.encode(result or { success = false, message = 'Szerver hiba' }))
 end)
 
---- Get contracts
+--- Get contracts (shared - available to all companies)
 RegisterNUICallback('company_getContracts', function(data, cb)
-    local result = lib.callback.await('realrpg_cargo:company:getContracts', false)
-    cb(json.encode(result or {}))
+    cb(json.encode({ loading = true }))
+    TriggerServerEvent('realrpg_cargo:contracts:getAvailable')
 end)
 
---- Accept contract
+-- Contracts response from server
+RegisterNetEvent('realrpg_cargo:contracts:availableResult', function(contracts)
+    SendNUIMessage({
+        subject = 'COMPANY_CONTRACTS',
+        data = contracts or {}
+    })
+end)
+
+--- Accept contract (competitive)
 RegisterNUICallback('company_acceptContract', function(data, cb)
-    local result = lib.callback.await('realrpg_cargo:company:acceptContract', false, data)
-    cb(json.encode(result or { success = false, message = 'Szerver hiba' }))
+    cb(json.encode({ loading = true }))
+    TriggerServerEvent('realrpg_cargo:contracts:accept', data.contractId)
+end)
+
+-- Accept result
+RegisterNetEvent('realrpg_cargo:contracts:acceptResult', function(result)
+    if result and result.success then
+        DoCustomHudText('success', result.message, 5000)
+    else
+        DoCustomHudText('fail', result and result.message or 'Hiba!', 5000)
+    end
+    -- Refresh contracts list
+    TriggerServerEvent('realrpg_cargo:contracts:getAvailable')
+end)
+
+-- Notification when another company takes a contract
+RegisterNetEvent('realrpg_cargo:contracts:taken', function(data)
+    DoCustomHudText('warning', data.companyName .. ' elfogadta a szerződést!', 5000)
 end)
 
 --- Deposit money

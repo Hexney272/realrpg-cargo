@@ -621,13 +621,14 @@ Config.company = {
         fuelCostPerKm = 250,             -- 250 Ft / km üzemanyag (reális dízel ár)
     },
 
-    -- Szerződés rendszer
+    -- Szerződés rendszer (SHARED - minden cég ugyanazokat látja, verseny!)
     contracts = {
-        maxActive = 3,                   -- Max aktív szerződés egyszerre
-        refreshInterval = 60,            -- Új szerződések ennyi percenként generálódnak
-        baseReward = 150000,             -- 150.000 Ft alap jutalom
-        distanceMultiplier = 1200,       -- +1.200 Ft / km távolság
-        qualityBonus = 0.20,             -- +20% ha 95%+ minőséggel teljesíted
+        maxActive = 3,                   -- Max aktív (elfogadott) szerződés cégenként
+        maxAvailable = 8,                -- Max elérhető szerződés egyszerre (összes cégnek közös)
+        refreshInterval = 30,            -- Új szerződések ennyi percenként generálódnak
+        baseReward = 120000,             -- 120.000 Ft alap jutalom
+        distanceMultiplier = 3500,       -- +3.500 Ft / km távolság
+        qualityBonus = 0.20,             -- +20% bónusz ha 95%+ minőséggel teljesíted
         deadlineDefault = 24,            -- 24 óra alapértelmezett határidő
         penaltyRate = 0.25,              -- 25% büntetés ha lejár a határidő
     },
