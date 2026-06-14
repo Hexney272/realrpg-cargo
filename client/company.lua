@@ -31,12 +31,16 @@ end, false)
 
 --- Get company data (dashboard)
 RegisterNUICallback('company_getData', function(data, cb)
-    local result = lib.callback.await('realrpg_cargo:company:get', false)
-    if result then
-        cb(json.encode(result))
-    else
-        cb(json.encode(json.null))
-    end
+    cb(json.encode({ loading = true }))
+    TriggerServerEvent('realrpg_cargo:company:requestData')
+end)
+
+-- Response from server with company data
+RegisterNetEvent('realrpg_cargo:company:dataResult', function(result)
+    SendNUIMessage({
+        subject = 'COMPANY_DATA',
+        data = result
+    })
 end)
 
 --- Create company

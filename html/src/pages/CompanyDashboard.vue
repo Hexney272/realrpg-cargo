@@ -241,22 +241,31 @@ const progressPercent = computed(() => {
 })
 
 async function loadData() {
-  const data = await post('company_getData', {})
-  if (data && data.company) {
-    company.value = data.company
-    myRole.value = data.myRole
-    employees.value = data.employees || []
-    vehicles.value = data.vehicles || []
-    contracts.value = data.contracts || []
-    transactions.value = data.transactions || []
-    config.value = data.config || {}
-  } else {
-    company.value = null
-    // Load invites for players without company
-    const inv = await post('company_getInvites', {})
-    if (inv && Array.isArray(inv)) invites.value = inv
-  }
+  // Request data from server (response comes via NUI message 'COMPANY_DATA')
+  await post('company_getData', {})
 }
+
+// Listen for company data from server
+useNui().onMessage((event) => {
+  if (event.data && event.data.subject === 'COMPANY_DATA') {
+    const data = event.data.data
+    if (data && data.company) {
+      company.value = data.company
+      myRole.value = data.myRole
+      employees.value = data.employees || []
+      vehicles.value = data.vehicles || []
+      contracts.value = data.contracts || []
+      transactions.value = data.transactions || []
+      config.value = data.config || {}
+    } else {
+      company.value = null
+      // Load invites
+      post('company_getInvites', {}).then(inv => {
+        if (inv && Array.isArray(inv)) invites.value = inv
+      })
+    }
+  }
+})
 
 async function createCompany() {
   if (!newCompanyName.value) {

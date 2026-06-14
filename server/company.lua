@@ -202,15 +202,15 @@ RegisterNetEvent('realrpg_cargo:company:tryCreate', function(data)
     TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = true, message = 'Vállalkozás "' .. name .. '" sikeresen létrehozva!' })
 end)
 
---- Get player's company data (dashboard)
-lib.callback.register('realrpg_cargo:company:get', function(source)
+--- Get player's company data (dashboard) - via server event
+RegisterNetEvent('realrpg_cargo:company:requestData', function()
+    local _source = source
     local success, result = pcall(function()
-        local xPlayer = ESX.GetPlayerFromId(source)
+        local xPlayer = ESX.GetPlayerFromId(_source)
         if not xPlayer then return nil end
 
         local identifier = xPlayer.identifier
 
-        -- Find employee record
         local employee = MySQL.query.await([[
             SELECT e.*, c.*,
                 e.id as employee_id, e.role as my_role, e.salary as my_salary,
@@ -226,7 +226,6 @@ lib.callback.register('realrpg_cargo:company:get', function(source)
         local companyId = company.company_id
         local level = getCompanyLevel(company)
 
-        -- Get employees
         local employees = MySQL.query.await([[
             SELECT e.*, u.firstname, u.lastname
             FROM `realrpg_cargo_employees` e
@@ -235,17 +234,14 @@ lib.callback.register('realrpg_cargo:company:get', function(source)
             ORDER BY FIELD(e.role, 'owner', 'manager', 'dispatcher', 'driver')
         ]], { companyId })
 
-        -- Get vehicles
         local vehicles = MySQL.query.await('SELECT * FROM `realrpg_cargo_vehicles` WHERE `company_id` = ?', { companyId })
 
-        -- Get active contracts
         local contracts = MySQL.query.await([[
             SELECT * FROM `realrpg_cargo_contracts`
             WHERE `company_id` = ? AND `status` IN ('available', 'accepted', 'in_progress')
             ORDER BY `created_at` DESC
         ]], { companyId })
 
-        -- Recent transactions
         local transactions = MySQL.query.await([[
             SELECT * FROM `realrpg_cargo_transactions`
             WHERE `company_id` = ?
@@ -281,11 +277,11 @@ lib.callback.register('realrpg_cargo:company:get', function(source)
     end)
 
     if not success then
-        print('[RealRPG Cargo] Company get error: ' .. tostring(result))
-        return nil
+        print('[RealRPG Cargo] Company getData error: ' .. tostring(result))
+        TriggerClientEvent('realrpg_cargo:company:dataResult', _source, nil)
+    else
+        TriggerClientEvent('realrpg_cargo:company:dataResult', _source, result)
     end
-
-    return result
 end)
 
 --- Delete / disband company
