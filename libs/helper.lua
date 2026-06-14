@@ -3,6 +3,8 @@
     SIMPLE GLOBAL FUNCTIONS - compatible with all FiveM environments
 ]]
 
+print('[RealRPG Cargo] helper.lua loaded - v2.3 (no namespaces)')
+
 -- ============================================================
 -- TABLE UTILITIES
 -- ============================================================

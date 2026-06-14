@@ -5,6 +5,8 @@
     SIMPLE GLOBAL FUNCTIONS - no namespace to avoid nil reference issues in FiveM
 ]]
 
+print('[RealRPG Cargo] hud.lua loaded - v2.3 (no namespaces)')
+
 function setHud()
 
     local presetName
