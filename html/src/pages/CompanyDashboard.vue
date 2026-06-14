@@ -62,7 +62,7 @@
       <button :class="['tab-btn', { active: tab === 'vehicles' }]" @click="tab = 'vehicles'">
         <span class="material-icons">directions_car</span> Járműpark
       </button>
-      <button :class="['tab-btn', { active: tab === 'contracts' }]" @click="tab = 'contracts'">
+      <button :class="['tab-btn', { active: tab === 'contracts' }]" @click="tab = 'contracts'; loadContracts()">
         <span class="material-icons">description</span> Szerződések
       </button>
       <button :class="['tab-btn', { active: tab === 'finances' }]" @click="tab = 'finances'">
@@ -130,9 +130,9 @@
       <!-- CONTRACTS TAB -->
       <CompanyContracts
         v-if="tab === 'contracts'"
-        :contracts="contracts"
+        :contracts="sharedContracts"
         :myRole="myRole"
-        @refresh="loadData"
+        @refresh="loadContracts"
       />
 
       <!-- FINANCES TAB -->
@@ -208,11 +208,12 @@ const contracts = ref([])
 const transactions = ref([])
 const config = ref({})
 const invites = ref([])
+const sharedContracts = ref([])
 
 const newCompanyName = ref('')
 const newCompanyDesc = ref('')
 const depositAmount = ref(null)
-const registrationFee = 500000
+const registrationFee = 2500000
 
 function formatMoney(val) { return MONEY.format(val || 0) }
 
@@ -265,7 +266,15 @@ useNui().onMessage((event) => {
       })
     }
   }
+  // Shared contracts response
+  if (event.data && event.data.subject === 'COMPANY_CONTRACTS') {
+    sharedContracts.value = event.data.data || []
+  }
 })
+
+function loadContracts() {
+  post('company_getContracts', {})
+}
 
 async function createCompany() {
   if (!newCompanyName.value) {

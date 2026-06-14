@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useNui, MONEY } from '../composables/useNui'
 
 const props = defineProps({
@@ -54,29 +54,15 @@ const props = defineProps({
   myRole: { type: String, default: 'driver' }
 })
 
-const { post, onMessage } = useNui()
-const contracts = ref([])
+const emit = defineEmits(['refresh'])
+const { post } = useNui()
 
 function formatMoney(val) { return MONEY.format(val || 0) }
 
 async function acceptContract(contractId) {
   await post('company_acceptContract', { contractId })
+  emit('refresh')
 }
-
-function loadContracts() {
-  post('company_getContracts', {})
-}
-
-// Listen for contracts data from server
-onMessage((event) => {
-  if (event.data && event.data.subject === 'COMPANY_CONTRACTS') {
-    contracts.value = event.data.data || []
-  }
-})
-
-onMounted(() => {
-  loadContracts()
-})
 </script>
 
 <style scoped>
