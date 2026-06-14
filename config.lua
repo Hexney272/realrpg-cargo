@@ -551,21 +551,21 @@ Config.company = {
     enabled = true,
 
     -- Cégalapítás
-    registrationFee = 500000,           -- 500.000 Ft alapítási díj
+    registrationFee = 2500000,          -- 2.500.000 Ft alapítási díj (reális: ~2.5M Ft egyéni vállalkozás)
     nameMinLength = 3,
     nameMaxLength = 30,
 
     -- Adózás
-    taxRate = 0.10,                      -- 10% adó a céges bevételek után
+    taxRate = 0.15,                      -- 15% adó a céges bevételek után (reális magyar adóteher)
     taxInterval = 24,                    -- Óránként hányszor von adót (24 = naponta)
 
     -- Szintek és limitek
     levels = {
-        { level = 1, name = 'Induló',           maxEmployees = 5,  maxVehicles = 3,  reputationNeeded = 0,    deliveriesNeeded = 0 },
-        { level = 2, name = 'Fejlődő',          maxEmployees = 8,  maxVehicles = 5,  reputationNeeded = 50,   deliveriesNeeded = 25 },
-        { level = 3, name = 'Haladó',           maxEmployees = 12, maxVehicles = 8,  reputationNeeded = 150,  deliveriesNeeded = 75 },
-        { level = 4, name = 'Professzionális',  maxEmployees = 18, maxVehicles = 12, reputationNeeded = 400,  deliveriesNeeded = 200 },
-        { level = 5, name = 'Nagyvállalat',     maxEmployees = 25, maxVehicles = 18, reputationNeeded = 1000, deliveriesNeeded = 500 },
+        { level = 1, name = 'Induló',           maxEmployees = 3,  maxVehicles = 2,  reputationNeeded = 0,    deliveriesNeeded = 0 },
+        { level = 2, name = 'Fejlődő',          maxEmployees = 5,  maxVehicles = 3,  reputationNeeded = 50,   deliveriesNeeded = 30 },
+        { level = 3, name = 'Haladó',           maxEmployees = 8,  maxVehicles = 5,  reputationNeeded = 200,  deliveriesNeeded = 100 },
+        { level = 4, name = 'Professzionális',  maxEmployees = 12, maxVehicles = 8,  reputationNeeded = 500,  deliveriesNeeded = 300 },
+        { level = 5, name = 'Nagyvállalat',     maxEmployees = 20, maxVehicles = 15, reputationNeeded = 1500, deliveriesNeeded = 750 },
     },
 
     -- Rangok / Szerepkörök
@@ -573,17 +573,17 @@ Config.company = {
         driver = {
             label = 'Sofőr',
             permissions = { 'drive', 'view_contracts' },
-            defaultSalary = 15000,      -- 15.000 Ft / szállítás
+            defaultSalary = 35000,      -- 35.000 Ft / szállítás (reális sofőr napi bér ~50-80k)
         },
         dispatcher = {
             label = 'Diszpécser',
             permissions = { 'drive', 'view_contracts', 'accept_contracts', 'assign_drivers' },
-            defaultSalary = 25000,      -- 25.000 Ft / szállítás
+            defaultSalary = 55000,      -- 55.000 Ft / szállítás
         },
         manager = {
             label = 'Menedzser',
             permissions = { 'drive', 'view_contracts', 'accept_contracts', 'assign_drivers', 'hire', 'fire', 'manage_vehicles', 'view_finances' },
-            defaultSalary = 40000,      -- 40.000 Ft / szállítás
+            defaultSalary = 85000,      -- 85.000 Ft / szállítás
         },
         owner = {
             label = 'Tulajdonos',
@@ -594,40 +594,38 @@ Config.company = {
 
     -- Fizetési rendszer
     salary = {
-        paymentType = 'per_delivery',    -- 'per_delivery' = szállításonként, 'hourly' = óránként
-        bonusMultiplier = 1.5,           -- Bónusz szorzó ha a minőség 95%+ volt
-        penaltyMultiplier = 0.5,         -- Büntetés szorzó ha megsemmisült a rakomány
+        paymentType = 'per_delivery',    -- 'per_delivery' = szállításonként
+        bonusMultiplier = 1.3,           -- +30% bónusz ha a minőség 95%+ volt
+        penaltyMultiplier = 0.5,         -- 50% büntetés ha megsemmisült a rakomány
     },
 
     -- Céges fuvar profit elosztás
     profit = {
-        companyShare = 0.30,             -- 30% a cégnek
-        driverShare = 0.70,              -- 70% a sofőrnek (ez a fizetése felett jár)
-        -- Ha a sofőr saját cég kamionján szállít, a company_share a cég kasszájába megy
+        companyShare = 0.25,             -- 25% a cégnek (kasszába)
+        driverShare = 0.75,              -- 75% a sofőrnek (a fuvardíjból)
     },
 
-    -- Járműpark
+    -- Járműpark (reális magyar kamion árak RP arányban)
     vehicles = {
-        -- Elérhető kamionok vásárlásra (model, név, ár Ft-ban)
         available = {
-            { model = 'hauler',     name = 'Hauler',          price = 1200000,  maintenanceCost = 25000 },
-            { model = 'phantom',    name = 'Phantom',         price = 1800000,  maintenanceCost = 35000 },
-            { model = 'phantom3',   name = 'Phantom Custom',  price = 2500000,  maintenanceCost = 45000 },
-            { model = 'packer',     name = 'Packer',          price = 1500000,  maintenanceCost = 30000 },
+            { model = 'hauler',     name = 'Hauler',          price = 8500000,   maintenanceCost = 150000 },
+            { model = 'phantom',    name = 'Phantom',         price = 12000000,  maintenanceCost = 220000 },
+            { model = 'phantom3',   name = 'Phantom Custom',  price = 18500000,  maintenanceCost = 350000 },
+            { model = 'packer',     name = 'Packer',          price = 9800000,   maintenanceCost = 180000 },
         },
-        maintenanceInterval = 50,        -- Szervíz szükséges ennyi km után (*100)
-        fuelCostPerKm = 150,             -- 150 Ft / km üzemanyag
+        maintenanceInterval = 50,        -- Szervíz szükséges ennyi szállítás után
+        fuelCostPerKm = 250,             -- 250 Ft / km üzemanyag (reális dízel ár)
     },
 
     -- Szerződés rendszer
     contracts = {
-        maxActive = 3,                   -- Max aktív szerződés egyszerre (cég szintjétől függ)
+        maxActive = 3,                   -- Max aktív szerződés egyszerre
         refreshInterval = 60,            -- Új szerződések ennyi percenként generálódnak
-        baseReward = 50000,              -- 50.000 Ft alap jutalom
-        distanceMultiplier = 500,        -- +500 Ft / km távolság
-        qualityBonus = 0.25,             -- +25% ha 95%+ minőséggel teljesíted
+        baseReward = 150000,             -- 150.000 Ft alap jutalom
+        distanceMultiplier = 1200,       -- +1.200 Ft / km távolság
+        qualityBonus = 0.20,             -- +20% ha 95%+ minőséggel teljesíted
         deadlineDefault = 24,            -- 24 óra alapértelmezett határidő
-        penaltyRate = 0.30,              -- 30% büntetés ha lejár a határidő
+        penaltyRate = 0.25,              -- 25% büntetés ha lejár a határidő
     },
 
     -- Reputáció
@@ -636,7 +634,7 @@ Config.company = {
         perContract = 5,                 -- +5 rep szerződés teljesítés
         perContractBonus = 3,            -- +3 rep ha bónusz minőséggel
         penaltyFailed = -10,             -- -10 rep ha megsemmisül / lejár
-        penaltyFired = -5,              -- -5 rep ha elbocsátasz valakit
+        penaltyFired = -3,              -- -3 rep ha elbocsátasz valakit
     },
 
     -- Meghívás

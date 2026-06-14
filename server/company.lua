@@ -2,9 +2,63 @@
     RealRPG Cargo - Company System (Server-side)
     Manages trucking companies: CRUD, employees, vehicles, contracts, payments
     All monetary values in Ft (Forint)
+    
+    Money handling: Uses ESX xPlayer methods (compatible with both ESX Legacy and ox_inventory)
+    - getMoney() / removeMoney() for cash
+    - getAccount('bank') / removeAccountMoney('bank') for bank
 ]]
 
 if not Config.company or not Config.company.enabled then return end
+
+-- ============================================================
+-- MONEY HELPERS (ESX compatible)
+-- ============================================================
+
+--- Get player's available money (cash + bank combined for company operations)
+---@param xPlayer table ESX player object
+---@return number Total available funds
+local function getPlayerFunds(xPlayer)
+    local cash = xPlayer.getMoney() or 0
+    local bank = xPlayer.getAccount('bank')
+    local bankMoney = bank and bank.money or 0
+    return cash + bankMoney
+end
+
+--- Remove money from player (prefers bank, falls back to cash)
+---@param xPlayer table ESX player object
+---@param amount number Amount to remove
+---@return boolean success
+local function removePlayerMoney(xPlayer, amount)
+    if not xPlayer or amount <= 0 then return false end
+
+    local bank = xPlayer.getAccount('bank')
+    local bankMoney = bank and bank.money or 0
+
+    if bankMoney >= amount then
+        xPlayer.removeAccountMoney('bank', amount)
+        return true
+    elseif xPlayer.getMoney() >= amount then
+        xPlayer.removeMoney(amount)
+        return true
+    elseif (bankMoney + xPlayer.getMoney()) >= amount then
+        -- Split between bank and cash
+        local fromBank = bankMoney
+        local fromCash = amount - fromBank
+        xPlayer.removeAccountMoney('bank', fromBank)
+        xPlayer.removeMoney(fromCash)
+        return true
+    end
+
+    return false
+end
+
+--- Add money to player (to bank account)
+---@param xPlayer table ESX player object
+---@param amount number Amount to add
+local function addPlayerMoney(xPlayer, amount)
+    if not xPlayer or amount <= 0 then return end
+    xPlayer.addAccountMoney('bank', amount)
+end
 
 -- ============================================================
 -- HELPERS
@@ -21,10 +75,11 @@ local function hasPermission(role, permission)
 end
 
 local function getCompanyLevel(company)
+    if not company then return Config.company.levels[1] end
     local levels = Config.company.levels
     for i = #levels, 1, -1 do
-        if company.reputation >= levels[i].reputationNeeded and
-           company.total_deliveries >= levels[i].deliveriesNeeded then
+        if (company.reputation or 0) >= levels[i].reputationNeeded and
+           (company.total_deliveries or 0) >= levels[i].deliveriesNeeded then
             return levels[i]
         end
     end
@@ -32,15 +87,21 @@ local function getCompanyLevel(company)
 end
 
 local function addTransaction(companyId, txType, amount, description, relatedId)
-    local company = MySQL.query.await('SELECT `balance` FROM `realrpg_cargo_companies` WHERE `id` = ?', { companyId })
-    local balanceAfter = (company and company[1]) and (company[1].balance + amount) or amount
+    local success, err = pcall(function()
+        local company = MySQL.query.await('SELECT `balance` FROM `realrpg_cargo_companies` WHERE `id` = ?', { companyId })
+        local balanceAfter = (company and company[1]) and (company[1].balance + amount) or amount
 
-    MySQL.update([[
-        INSERT INTO `realrpg_cargo_transactions` (`company_id`, `type`, `amount`, `balance_after`, `description`, `related_identifier`)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ]], { companyId, txType, amount, balanceAfter, description or '', relatedId })
+        MySQL.update([[
+            INSERT INTO `realrpg_cargo_transactions` (`company_id`, `type`, `amount`, `balance_after`, `description`, `related_identifier`)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ]], { companyId, txType, amount, balanceAfter, description or '', relatedId or '' })
 
-    MySQL.update('UPDATE `realrpg_cargo_companies` SET `balance` = `balance` + ? WHERE `id` = ?', { amount, companyId })
+        MySQL.update('UPDATE `realrpg_cargo_companies` SET `balance` = `balance` + ? WHERE `id` = ?', { amount, companyId })
+    end)
+
+    if not success then
+        print('[RealRPG Cargo] Transaction error: ' .. tostring(err))
+    end
 end
 
 -- ============================================================
@@ -53,7 +114,7 @@ lib.callback.register('realrpg_cargo:company:create', function(source, data)
     if not xPlayer then return { success = false, message = 'Játékos nem található' } end
 
     local identifier = xPlayer.identifier
-    local name = data.name
+    local name = data and data.name or nil
 
     -- Validations
     if not name or #name < Config.company.nameMinLength or #name > Config.company.nameMaxLength then
@@ -66,25 +127,40 @@ lib.callback.register('realrpg_cargo:company:create', function(source, data)
         return { success = false, message = 'Már van egy vállalkozásod!' }
     end
 
+    -- Check if player is already employed somewhere
+    local employed = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
+    if employed and employed[1] then
+        return { success = false, message = 'Már dolgozol egy vállalkozásnál! Előbb lépj ki.' }
+    end
+
     -- Check if name taken
     local nameTaken = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `name` = ?', { name })
     if nameTaken and nameTaken[1] then
         return { success = false, message = 'Ez a cégnév már foglalt!' }
     end
 
-    -- Check money
-    local playerMoney = xPlayer.getMoney()
-    if playerMoney < Config.company.registrationFee then
-        return { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft' }
+    -- Check money (bank + cash combined)
+    local funds = getPlayerFunds(xPlayer)
+    if funds < Config.company.registrationFee then
+        return { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft (neked van: ' .. funds .. ' Ft)' }
     end
 
     -- Deduct money and create
-    xPlayer.removeMoney(Config.company.registrationFee)
+    local moneyRemoved = removePlayerMoney(xPlayer, Config.company.registrationFee)
+    if not moneyRemoved then
+        return { success = false, message = 'Pénz levonás sikertelen!' }
+    end
 
     local insertId = MySQL.insert.await([[
         INSERT INTO `realrpg_cargo_companies` (`name`, `owner_identifier`, `description`)
         VALUES (?, ?, ?)
-    ]], { name, identifier, data.description or '' })
+    ]], { name, identifier, (data and data.description) or '' })
+
+    if not insertId then
+        -- Refund if DB insert failed
+        addPlayerMoney(xPlayer, Config.company.registrationFee)
+        return { success = false, message = 'Adatbázis hiba! Pénz visszautalva.' }
+    end
 
     -- Add owner as employee
     MySQL.insert.await([[
@@ -94,6 +170,12 @@ lib.callback.register('realrpg_cargo:company:create', function(source, data)
 
     -- Transaction record
     addTransaction(insertId, 'registration', -Config.company.registrationFee, 'Cégalapítási díj', identifier)
+
+    -- Notify
+    TriggerClientEvent('realrpg_cargo:showNotification', source, {
+        type = 'success',
+        text = 'Vállalkozás "' .. name .. '" sikeresen létrehozva!'
+    })
 
     return { success = true, message = 'Vállalkozás sikeresen létrehozva!', companyId = insertId }
 end)
@@ -592,21 +674,24 @@ end
 --- Deposit money into company
 lib.callback.register('realrpg_cargo:company:deposit', function(source, data)
     local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then return { success = false } end
+    if not xPlayer then return { success = false, message = 'Hiba' } end
 
     local identifier = xPlayer.identifier
-    local amount = tonumber(data.amount) or 0
+    local amount = tonumber(data and data.amount) or 0
 
     if amount <= 0 then return { success = false, message = 'Érvénytelen összeg!' } end
 
     local emp = MySQL.query.await('SELECT `company_id`, `role` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
     if not emp or not emp[1] then return { success = false, message = 'Nem vagy cégnél!' } end
 
-    if xPlayer.getMoney() < amount then
-        return { success = false, message = 'Nincs elég pénzed!' }
+    local funds = getPlayerFunds(xPlayer)
+    if funds < amount then
+        return { success = false, message = 'Nincs elég pénzed! (Van: ' .. funds .. ' Ft)' }
     end
 
-    xPlayer.removeMoney(amount)
+    local removed = removePlayerMoney(xPlayer, amount)
+    if not removed then return { success = false, message = 'Pénz levonás sikertelen!' } end
+
     addTransaction(emp[1].company_id, 'deposit', amount, 'Befizetés', identifier)
 
     return { success = true, message = amount .. ' Ft befizetve a céges kasszába.' }
@@ -615,10 +700,10 @@ end)
 --- Withdraw money from company
 lib.callback.register('realrpg_cargo:company:withdraw', function(source, data)
     local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then return { success = false } end
+    if not xPlayer then return { success = false, message = 'Hiba' } end
 
     local identifier = xPlayer.identifier
-    local amount = tonumber(data.amount) or 0
+    local amount = tonumber(data and data.amount) or 0
 
     if amount <= 0 then return { success = false, message = 'Érvénytelen összeg!' } end
 
@@ -633,7 +718,7 @@ lib.callback.register('realrpg_cargo:company:withdraw', function(source, data)
     end
 
     addTransaction(emp[1].company_id, 'withdrawal', -amount, 'Kivétel', identifier)
-    xPlayer.addMoney(amount)
+    addPlayerMoney(xPlayer, amount)
 
     return { success = true, message = amount .. ' Ft kivéve a kasszából.' }
 end)
