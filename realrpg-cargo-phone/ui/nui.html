@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html>
-<head><title>RealRPG Cargo Phone Bridge</title></head>
-<body style="margin:0;padding:0;background:transparent;pointer-events:none;">
-<!-- 
-    This is an invisible NUI page required for RegisterNUICallback to function.
-    The actual phone app UI is served from ui/build/index.html via Quasar's iframe.
-    This page does NOT display anything.
--->
+<head><title>RealRPG Cargo Phone NUI Bridge</title></head>
+<body style="margin:0;padding:0;background:transparent;pointer-events:none;width:0;height:0;overflow:hidden;">
 <script>
-// Forward NUI messages from Lua to the phone iframe
+// This invisible page receives SendNUIMessage from Lua
+// and forwards it to the phone iframe via postMessage
 window.addEventListener('message', function(event) {
-    // Only handle messages from Lua (they have a 'type' field)
     if (event.data && event.data.type) {
-        // Broadcast to all iframes (the phone app iframe will catch it)
-        const frames = document.querySelectorAll('iframe');
-        frames.forEach(function(frame) {
-            try { frame.contentWindow.postMessage(event.data, '*'); } catch(e) {}
-        });
+        // Forward to parent (qs-smartphone) which forwards to our iframe
+        try {
+            window.parent.postMessage(event.data, '*');
+        } catch(e) {}
     }
 });
 </script>

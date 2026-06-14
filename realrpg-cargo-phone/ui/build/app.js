@@ -9,7 +9,7 @@ const { bridge, api } = QSPhoneBridge.create({
     targetOrigin: 'https://cfx-nui-qs-smartphone',
 });
 
-const RESOURCE_NAME = 'realrpg-cargo'; // NUI callbacks are in the main cargo resource
+const RESOURCE_NAME = 'realrpg-cargo-phone'; // Phone resource handles its own NUI callbacks
 
 // Money formatter
 const MONEY = new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -24,14 +24,14 @@ function nuiPost(event, data = {}) {
         xhr.open('POST', `https://${RESOURCE_NAME}/${event}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) resolve(true);
+            if (xhr.readyState === 4) resolve(xhr.responseText || 'ok');
         };
         xhr.onerror = function() { resolve(false); };
         xhr.send(JSON.stringify(data));
     });
 }
 
-// Listen for NUI messages from Lua
+// Listen for NUI messages (SendNUIMessage from Lua goes to nui.html which forwards here)
 window.addEventListener('message', (event) => {
     const msg = event.data;
     if (!msg || !msg.type) return;
@@ -50,7 +50,7 @@ window.addEventListener('message', (event) => {
             if (msg.data && msg.data.message) {
                 api.showToastNotification({ title: 'RealRPG Cargo', text: msg.data.message });
             }
-            loadData();
+            setTimeout(loadData, 500);
             break;
     }
 });
