@@ -79,22 +79,24 @@ function ECO.Utils.shallowCopy(original)
 end
 
 --- Deep copy of a table (recursive)
+--- Uses local self-reference to avoid dependency on ECO.Utils being defined
 ---@param orig any
 ---@return any
-function ECO.Utils.deepCopy(orig)
+local function _deepCopy(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
-            copy[ECO.Utils.deepCopy(orig_key)] = ECO.Utils.deepCopy(orig_value)
+            copy[_deepCopy(orig_key)] = _deepCopy(orig_value)
         end
-        setmetatable(copy, ECO.Utils.deepCopy(getmetatable(orig)))
+        setmetatable(copy, _deepCopy(getmetatable(orig)))
     else
         copy = orig
     end
     return copy
 end
+ECO.Utils.deepCopy = _deepCopy
 
 --- Get value from table with fallback
 ---@param tbl table|nil

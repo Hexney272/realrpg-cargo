@@ -441,9 +441,11 @@ Config.approvedVehicles = {
     "packer"
 }
 
-for i = 1, #Config.approvedVehicles do
-
-    Config.approvedVehicles[GetHashKey(Config.approvedVehicles[i])] = Config.approvedVehicles[i]
+-- Hash approved vehicles for quick lookup (client-side only)
+if GetHashKey then
+    for i = 1, #Config.approvedVehicles do
+        Config.approvedVehicles[GetHashKey(Config.approvedVehicles[i])] = Config.approvedVehicles[i]
+    end
 end
 
 -- ZONE MAP: https:--imgvol.cdn.lcpdfr.com/screenshots/monthly_2015_06/LSSD_Patrol_Zones.png.a9d508cd773ddae957219efd0df43df3.png
