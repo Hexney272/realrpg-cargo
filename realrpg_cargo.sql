@@ -559,12 +559,17 @@ COMMIT;
 
 
 -- ============================================================
--- CURRENCY CONVERSION: USD → HUF (Ft)
--- Multiply all monetary values by 300 (approximate RP exchange rate)
+-- CURRENCY FIX: Set realistic Ft values
+-- Normal products: caution 50.000 - 150.000 Ft
+-- Valuable products: caution 200.000 - 500.000 Ft
+-- Defender/mission products: caution 500.000 - 1.500.000 Ft
+-- Value = illegal resale value of the cargo itself
 -- ============================================================
 
-UPDATE `realrpg_cargo_products` SET `caution_money` = 300000 WHERE `caution_money` = 1000;
-UPDATE `realrpg_cargo_products` SET `caution_money` = 500000 WHERE `caution_money` = 1010;
-UPDATE `realrpg_cargo_products` SET `caution_money` = 5000000 WHERE `caution_money` = 50000;
-UPDATE `realrpg_cargo_products` SET `caution_money` = 3000000 WHERE `caution_money` = 30000;
-UPDATE `realrpg_cargo_products` SET `value` = `value` * 300;
+-- Normal products (caution_money was 1000 USD)
+UPDATE `realrpg_cargo_products` SET `caution_money` = 75000, `value` = `value` * 50 WHERE `defender` = '' AND `caution_money` = 1000;
+UPDATE `realrpg_cargo_products` SET `caution_money` = 100000, `value` = `value` * 50 WHERE `defender` = '' AND `caution_money` = 1010;
+
+-- Defender/mission products (high value, need grind to afford caution)
+UPDATE `realrpg_cargo_products` SET `caution_money` = 750000, `value` = 3000000 WHERE `defender` != '' AND `caution_money` = 30000;
+UPDATE `realrpg_cargo_products` SET `caution_money` = 1200000, `value` = 5000000 WHERE `defender` != '' AND `caution_money` = 50000;

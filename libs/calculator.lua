@@ -8,13 +8,7 @@ function calculatePrice(propertyNames, km, product)
     local defender = product.defender
     local value = product.value
 
-    if defender ~= '' then
-        return {
-            freightFee = value,
-            illegalPrice = value,
-        }
-    end
-
+    -- Defaults
     km = km or 1
     local kilometerFee = Config.kilometerFee or 2500
     local distanceMultiplier = Config.distanceMultiplier or 0.995
@@ -23,6 +17,13 @@ function calculatePrice(propertyNames, km, product)
     local freightFee = km * kilometerFee * (distanceMultiplier ^ km) + baseFee
     local maxPrice = freightFee * 2
     local illegalPrice = value
+
+    -- Defender missions: freight fee is STILL distance-based, but with a multiplier
+    -- (NOT the full product value - that would be unrealistic)
+    if defender ~= '' then
+        freightFee = freightFee * 2.5  -- 2.5x multiplier for protected cargo
+        illegalPrice = value
+    end
 
     if propertyNames and next(propertyNames) ~= nil then
         for i = 1, #propertyNames do

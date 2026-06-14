@@ -245,24 +245,31 @@ async function loadData() {
   if (data && data.company) {
     company.value = data.company
     myRole.value = data.myRole
-    employees.value = data.employees
-    vehicles.value = data.vehicles
-    contracts.value = data.contracts
-    transactions.value = data.transactions
-    config.value = data.config
+    employees.value = data.employees || []
+    vehicles.value = data.vehicles || []
+    contracts.value = data.contracts || []
+    transactions.value = data.transactions || []
+    config.value = data.config || {}
   } else {
     company.value = null
     // Load invites for players without company
     const inv = await post('company_getInvites', {})
-    if (inv) invites.value = inv
+    if (inv && Array.isArray(inv)) invites.value = inv
   }
 }
 
 async function createCompany() {
-  if (!newCompanyName.value) return
+  if (!newCompanyName.value) {
+    alert('Kérlek adj meg egy cégnevet!')
+    return
+  }
   const result = await post('company_create', { name: newCompanyName.value, description: newCompanyDesc.value })
-  if (result?.success) {
+  if (result && result.success) {
     await loadData()
+  } else if (result && result.message) {
+    alert(result.message)
+  } else {
+    alert('Hiba történt a cég létrehozásakor. Ellenőrizd hogy importáltad-e a realrpg_cargo_company.sql fájlt az adatbázisba!')
   }
 }
 
