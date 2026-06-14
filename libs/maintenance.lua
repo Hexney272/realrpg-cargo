@@ -300,7 +300,6 @@ RegisterNetEvent('eco_cargo:cargoDiagnostics', function()
 
                 -- LOCALE DIAGNOSTICS
                 localeDiagnostics(product)
-            end
         end
 
         for id, air in pairs(uniqueIdC) do

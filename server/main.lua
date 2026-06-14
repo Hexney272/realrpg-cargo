@@ -4,13 +4,12 @@
     Modernized: ox_lib callbacks, oxmysql, secure payment
 ]]
 
-ECO = {
-    CARGO = {},
-    PLAYERS = {},
-    MISSION = {},
-    PRODUCTS = {},
-    loadingZonesIds = {}
-}
+ECO = ECO or {}
+ECO.CARGO = {}
+ECO.PLAYERS = {}
+ECO.MISSION = {}
+ECO.PRODUCTS = {}
+ECO.loadingZonesIds = {}
 
 -- ============================================================
 -- CALLBACKS (using lib.callback from ox_lib)

@@ -1,27 +1,26 @@
 --ESX = nil
-ECO = {
-    blips = {},
-    zones = {},
-    allZones = {},
-    distances = {},
-    loadingZones = {},
-    targetZone = {},
-    closestZones = {},
-    allProducts = {},
-    CARGO = {
-        interruption = true
-    },
-    MONITOR = {
-        queryStatus = {},
-        hasAlreadyNotify = {},
-        area = 'country'
-    },
-    LOADED = {},
-    PLAYER = {},
-    PLAYERS = {},
-    MISSION = {},
-    DIAGNOSTICS = {}
+ECO = ECO or {}
+ECO.blips = {}
+ECO.zones = {}
+ECO.allZones = {}
+ECO.distances = {}
+ECO.loadingZones = {}
+ECO.targetZone = {}
+ECO.closestZones = {}
+ECO.allProducts = {}
+ECO.CARGO = {
+    interruption = true
 }
+ECO.MONITOR = {
+    queryStatus = {},
+    hasAlreadyNotify = {},
+    area = 'country'
+}
+ECO.LOADED = {}
+ECO.PLAYER = {}
+ECO.PLAYERS = {}
+ECO.MISSION = {}
+ECO.DIAGNOSTICS = {}
 
 local selectCharacters
 
