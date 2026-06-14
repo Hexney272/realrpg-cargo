@@ -548,10 +548,11 @@ RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
 
     -- Pay the player
     if amount > 0 then
-        if moneyType == 'black_money' or moneyType == 'bank' then
-            xPlayer.addAccountMoney(moneyType, amount)
+        if moneyType == 'black_money' then
+            xPlayer.addAccountMoney('black_money', amount)
         else
-            xPlayer.addMoney(amount)
+            -- Normal delivery: pay to bank (ox_inventory compatible)
+            xPlayer.addAccountMoney('bank', amount)
         end
 
         TriggerClientEvent('realrpg_cargo:showNotification', _source, {
@@ -736,7 +737,21 @@ function removeMoney(_source, amount)
 
     if not xPlayer then return end
 
-    xPlayer.removeMoney(amount)
+    -- Try bank first, then cash (ox_inventory compatible)
+    local bank = xPlayer.getAccount('bank')
+    local bankMoney = bank and bank.money or 0
+
+    if bankMoney >= amount then
+        xPlayer.removeAccountMoney('bank', amount)
+    elseif xPlayer.getMoney() >= amount then
+        xPlayer.removeMoney(amount)
+    else
+        -- Split between bank and cash
+        local fromBank = bankMoney
+        local fromCash = amount - fromBank
+        if fromBank > 0 then xPlayer.removeAccountMoney('bank', fromBank) end
+        if fromCash > 0 then xPlayer.removeMoney(fromCash) end
+    end
 
     TriggerClientEvent('realrpg_cargo:showNotification', _source, {
         type = 'money',

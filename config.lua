@@ -140,11 +140,15 @@ Config.stolenMissionPaymentMultiplier = 2
 -- Delay time between the start of two transports (the cp disappears)
 Config.cargoRequestDelay = 1 -- DEFAULT: 1, in minute
 
-Config.kilometerFee = 90 -- DEFAULT: 90, Kilométerenkénti díj
+Config.kilometerFee = 2500 -- Kilométerenkénti díj (Ft) - reális fuvarozási km díj
 
-Config.distanceMultiplier = 0.99 -- DEFAULT: 0.99,  Távolság szorzó (1 alatt csökkenti a távolság arányában a kifizetést)
+Config.distanceMultiplier = 0.995 -- Távolság szorzó (1 alatt enyhén csökkenti a km díjat nagy távolságon)
 
-Config.baseFee = 100 -- DEFAULT: 100, Kiállási alapdíj
+Config.baseFee = 15000 -- Kiállási alapdíj (Ft) - minden fuvarért jár alap
+
+-- FONTOS: A kaució (caution_money) és az áru értéke (value) a realrpg_cargo_products
+-- SQL táblában van beállítva termékenként. Ha Ft-ra váltottál, frissítsd ezeket is!
+-- Példa: UPDATE realrpg_cargo_products SET caution_money = caution_money * 300, value = value * 300;
 
 Config.countingZoneRadius = 40 -- DEFAULT: 40 -- Defenders must be within that range
 
