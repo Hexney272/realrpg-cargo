@@ -193,6 +193,14 @@ lib.callback.register('eco_cargo:getAllStatistics', function(source, data)
     return result
 end)
 
+lib.callback.register('eco_cargo:getAchievements', function(source)
+
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then return {} end
+
+    return ECO.Achievements.getAll(xPlayer.identifier)
+end)
+
 lib.callback.register('eco_cargo:getStatistics', function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -335,6 +343,15 @@ RegisterNetEvent('eco_cargo:cargoRegister', function(ecoCargo)
         loadingZoneId = ecoCargo.loadingZoneId,
         time = osTime
     })
+
+    -- DISCORD: Cargo started notification
+    ECO.Discord.cargoStarted({
+        owner = ecoCargo.owner,
+        productId = ecoCargo.productId,
+        trailerPlate = plate,
+        destinationZoneId = ecoCargo.destinationZoneId,
+        km = ecoCargo.km
+    })
 end)
 
 RegisterNetEvent('eco_cargo:cargoUpdate', function(ecoCargo)
@@ -459,6 +476,22 @@ RegisterNetEvent('eco_cargo:deleteCargo', function(plate, state)
     end
 
     ECO.CARGO[plate] = nil
+
+    -- DISCORD: Notify based on cargo state
+    if state == 'DESTROYED' then
+        ECO.Discord.cargoDestroyed({
+            driverName = xPlayer.getName and xPlayer.getName() or identifier,
+            productId = ecoCargo.productId,
+            trailerPlate = plate
+        })
+    elseif stolen then
+        ECO.Discord.cargoStolen({
+            thiefName = xPlayer.getName and xPlayer.getName() or identifier,
+            ownerName = ecoCargo.owner.characterName or 'Unknown',
+            productId = ecoCargo.productId,
+            trailerPlate = plate
+        })
+    end
 end)
 
 RegisterNetEvent('eco_cargo:changeMonitorOwner', function(oldOwner, plate)
@@ -545,6 +578,19 @@ RegisterNetEvent('eco_cargo:deliverCargo', function(plate)
 
     -- Return payment data to client for report display
     TriggerClientEvent('eco_cargo:paymentProcessed', _source, paymentData)
+
+    -- DISCORD: Successful delivery notification
+    ECO.Discord.cargoDelivered({
+        driverName = xPlayer.getName and xPlayer.getName() or identifier,
+        productId = ecoCargo.productId,
+        trailerPlate = plate,
+        km = ecoCargo.km,
+        quality = ecoCargo.quality,
+        payable = paymentData.payable
+    })
+
+    -- ACHIEVEMENTS: Check after successful delivery
+    ECO.Achievements.check(identifier, _source)
 end)
 
 -- DEPRECATED: Legacy event handlers (kept for backward compatibility warnings)
@@ -631,6 +677,15 @@ RegisterNetEvent('eco_cargo:missionRegister', function(data)
     data.otherText = _('mission_alert')
 
     TriggerClientEvent('eco_cargo:missionNotification', -1, data)
+
+    -- DISCORD: Mission registered notification
+    ECO.Discord.missionRegistered({
+        owner = data.owner,
+        defender = data.defender,
+        missionId = missionId,
+        productId = data.productId,
+        loadingZoneId = data.loadingZoneId
+    })
 end)
 
 RegisterNetEvent('eco_cargo:showCountingZone', function(coord)

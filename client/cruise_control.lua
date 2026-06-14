@@ -9,54 +9,57 @@ local requestSpeed = 0
 
 Citizen.CreateThread(function()
 
-    while Config.enableSpeedControl do
+    if not Config.enableSpeedControl then return end
 
-        Citizen.Wait(0)
+    while true do
 
-        if ECO.PLAYER.isApprovedDriver then
+        if ECO.PLAYER.isApprovedDriver and LastCCVehicle then
 
-            if LastCCVehicle then
+            Citizen.Wait(0)
 
-                if IsControlJustPressed(0, 72) or IsControlJustPressed(0, 76) then -- brake or handbrake
+            if IsControlJustPressed(0, 72) or IsControlJustPressed(0, 76) then -- brake or handbrake
+                UnsetCruiseControl()
+            else
+                local engineHealth = GetVehicleEngineHealth(ECO.Vehicle)
+
+                if LastVehicleHealth and ((LastVehicleHealth - engineHealth) > 10) then
                     UnsetCruiseControl()
                 else
-                    local engineHealth = GetVehicleEngineHealth(ECO.Vehicle)
+                    LastVehicleHealth = engineHealth
 
-                    if LastVehicleHealth and ((LastVehicleHealth - engineHealth) > 10) then
-                        UnsetCruiseControl()
-                    else
-                        LastVehicleHealth = engineHealth
+                    local curSpeed = GetEntitySpeed(ECO.Vehicle)
 
-                        local curSpeed = GetEntitySpeed(ECO.Vehicle)
+                    local diff = CurrentCCMetersPerSecond - curSpeed
 
-                        local diff = CurrentCCMetersPerSecond - curSpeed
+                    if diff > SpeedDiffTolerance then -- car is slower then required
+                        local pedalPressure = 0.95
 
-                        if diff > SpeedDiffTolerance then -- car is slower then required
-                            local pedalPressure = 0.95
-
-                            if IsSteering(ECO.Vehicle) then
-                                pedalPressure = 0.4
-                            end
-
-                            if IncreasePressure then
-                                LastIdealPedalPressure = LastIdealPedalPressure + 0.025
-                                IncreasePressure = false
-                            end
-
-                            SetControlNormal(0, 71, pedalPressure)
-                        elseif diff > -(4 * SpeedDiffTolerance) then -- when speed is met
-                            ApplyIdealPedalPressure()
-                        else
-                            LastIdealPedalPressure = 0.2
+                        if IsSteering(ECO.Vehicle) then
+                            pedalPressure = 0.4
                         end
+
+                        if IncreasePressure then
+                            LastIdealPedalPressure = LastIdealPedalPressure + 0.025
+                            IncreasePressure = false
+                        end
+
+                        SetControlNormal(0, 71, pedalPressure)
+                    elseif diff > -(4 * SpeedDiffTolerance) then -- when speed is met
+                        ApplyIdealPedalPressure()
+                    else
+                        LastIdealPedalPressure = 0.2
                     end
                 end
             end
 
+        elseif ECO.PLAYER.isApprovedDriver then
+
+            Citizen.Wait(0)
+
+            -- Speed control input (only when driving approved vehicle)
             if IsControlJustReleased(0, 96) then
 
                 if requestSpeed < 200 then
-
                     requestSpeed = requestSpeed + 10.0
                     msginf(_('tempomat_speed', requestSpeed), 3000)
                     SetCruiseControl(requestSpeed)
@@ -66,7 +69,6 @@ Citizen.CreateThread(function()
             if IsControlJustReleased(0, 97) then
 
                 if requestSpeed >= 10 then
-
                     requestSpeed = requestSpeed - 10.0
                     msginf(_('tempomat_speed', requestSpeed), 3000)
                     SetCruiseControl(requestSpeed)
@@ -74,6 +76,7 @@ Citizen.CreateThread(function()
             end
         else
 
+            -- Not in approved vehicle: sleep longer
             UnsetCruiseControl()
             Citizen.Wait(1000)
         end

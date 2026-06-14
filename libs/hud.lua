@@ -141,3 +141,20 @@ RegisterNetEvent('eco_cargo:missionNotification', function(data)
         end
     end
 end)
+
+
+-- ============================================================
+-- ACHIEVEMENT NOTIFICATIONS
+-- ============================================================
+
+RegisterNetEvent('eco_cargo:achievementUnlocked', function(data)
+
+    -- Show a special achievement notification
+    SendNUIMessage({
+        subject = "ACHIEVEMENT",
+        achievement = data
+    })
+
+    -- Also show a standard notification
+    ECO.Hud.notify('success', '🏆 ' .. (_(data.name) or data.name), 8000)
+end)

@@ -49,9 +49,11 @@ end)
 
 -- FAST LIVEDATA: Real-time cargo monitoring (collision, roll, speed)
 -- OPTIMIZED: Uses dynamic wait time based on cargo state and speed
+-- Thread only processes when trailer exists, otherwise sleeps efficiently
 Citizen.CreateThread(function()
 
-    while not ECO.CARGO or not ECO.CARGO.trailer do Citizen.Wait(1000) end
+    -- Wait for initial cargo system to be ready
+    while not ECO.LOADED.player do Citizen.Wait(1000) end
 
     local speed = 0
     local _GetFrameTime, prevSpeed, roll
@@ -60,7 +62,7 @@ Citizen.CreateThread(function()
 
     while true do
 
-        if ECO.CARGO.trailer then
+        if ECO.CARGO and ECO.CARGO.trailer then
 
             prevSpeed = speed
             speed = GetEntitySpeed(ECO.CARGO.trailer) * 3.6
@@ -94,6 +96,8 @@ Citizen.CreateThread(function()
 
             Citizen.Wait(waitTime)
         else
+            -- No trailer: sleep longer, reset speed
+            speed = 0
             Citizen.Wait(2000)
         end
     end

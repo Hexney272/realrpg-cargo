@@ -36,6 +36,8 @@ client_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'libs/calculator.lua',
+    'server/discord.lua',
+    'server/achievements.lua',
     'server/main.lua',
 }
 

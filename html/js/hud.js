@@ -1,219 +1,219 @@
+/**
+ * ECO Cargo - HUD Module (Modern vanilla JS)
+ * Handles delivery info display, notifications, and action prompts
+ */
+
+'use strict';
+
+const hudWrapper = document.getElementById('hudWrapper');
+const deliveryWrapper = document.getElementById('deliveryWrapper');
+const generalWrapper = document.getElementById('generalWrapper');
+const actionWrapper = document.getElementById('actionWrapper');
+
 let hud = {};
-let hudWrapper = $("#hudWrapper");
-
-let deliveryWrapper = $("#deliveryWrapper");
-let generalWrapper = $("#generalWrapper");
-let actionWrapper = $("#actionWrapper");
-
 let monitor = {};
+let persistentNotifs = {};
 
-function closeHud(identifier) {
-
-    $.when($(identifier).fadeOut()).done(function () {
-        $(identifier).remove();
-    });
-}
-
+/**
+ * Display delivery information HUD
+ * @param {object} data - Delivery data from Lua
+ */
 function deliveryInfo(data) {
+    if (isEmpty(data)) return;
 
-    if (!$.isEmptyObject(data)) {
+    deliveryWrapper.innerHTML = '';
 
-        deliveryWrapper.empty();
+    data.goodsQuality = Math.max(0, data.goodsQuality);
+    const properties = jsonParse(data.productProperties);
 
-        data.goodsQuality = data.goodsQuality < 0 ? 0 : data.goodsQuality;
+    const template = document.querySelector('.hud').cloneNode(true);
+    template.classList.remove('template');
+    template.classList.add('dInfo');
 
-        let properties = jsonParse(data.productProperties);
+    hud = {
+        wheel: $('.wheel', template),
+        roll: $('.roll', template),
+        damage: $('.damage', template),
+        trailerHealth: $('.trailerHealth', template),
+        trailerBar: $('.trailerBar', template),
+        goodsQuality: $('.goodsQuality', template),
+        goodsBar: $('.goodsBar', template),
+        speedLimit: $('.speedLimit', template)
+    };
 
-        let template = $(".hud").clone();
-        template.removeClass("template");
-        template.addClass("dInfo");
+    $('.hudProperties', template).innerHTML = icons(properties);
+    $('.productName', template).textContent = data.productName;
 
-        hud = {
-            wheel: template.find(".wheel"),
-            roll: template.find(".roll"),
-            damage: template.find(".damage"),
-            trailerHealth: template.find(".trailerHealth"),
-            trailerBar: template.find(".trailerBar"),
-            goodsQuality: template.find(".goodsQuality"),
-            goodsBar: template.find(".goodsBar"),
-            speedLimit: template.find(".speedLimit")
-        };
+    hud.trailerBar.style.width = data.trailerHealth + '%';
+    hud.goodsBar.style.width = data.goodsQuality + '%';
+    hud.trailerHealth.textContent = data.trailerHealth;
+    hud.goodsQuality.textContent = data.goodsQuality;
+    hud.speedLimit.textContent = data.speedLimit;
 
-
-        template.find(".hudProperties").html(icons(properties));
-        template.find(".productName").html(data.productName);
-        /*template.find(".hudAddress").html(data.targetZone.address);*/
-
-        hud.trailerBar.css("width", data.trailerHealth + "%");
-        hud.goodsBar.css("width", data.goodsQuality + "%");
-
-        hud.trailerHealth.html(data.trailerHealth);
-        hud.goodsQuality.html(data.goodsQuality);
-
-        hud.speedLimit.html(data.speedLimit);
-
-
-        deliveryWrapper.html(template);
-
-        hudWrapper.css("display", "block");
-    }
+    deliveryWrapper.appendChild(template);
+    hudWrapper.style.display = 'block';
 }
 
+/**
+ * Update HUD live data
+ * @param {string} paramName - Parameter to update
+ * @param {any} value - New value
+ */
 function updateHud(paramName, value) {
-
-    if (jQuery.isEmptyObject(hud)) {
-        return false
-    }
+    if (isEmpty(hud)) return;
 
     switch (paramName) {
-
         case 'trailerHealth':
-
-            hud.trailerBar.css("width", value + "%");
-            hud.trailerHealth.html(value);
+            hud.trailerBar.style.width = value + '%';
+            hud.trailerHealth.textContent = value;
 
             if (monitor.damage === undefined) {
-
-                hud.damage.addClass("alertIcon");
+                hud.damage.classList.add('alertIcon');
                 monitor.damage = true;
-
-                setTimeout(function () {
-
-                    hud.damage.removeClass("alertIcon");
+                setTimeout(() => {
+                    hud.damage.classList.remove('alertIcon');
                     delete monitor.damage;
-
                 }, 5000);
             }
             break;
 
         case 'goodsQuality':
-
-            value = value < 0 ? 0 : value;
-
-            hud.goodsBar.css("width", value + "%");
-            hud.goodsQuality.html(value);
+            value = Math.max(0, value);
+            hud.goodsBar.style.width = value + '%';
+            hud.goodsQuality.textContent = value;
             break;
 
         case 'wheel':
-
             if (monitor.wheel === undefined) {
-
-                hud.wheel.addClass("alertIcon");
+                hud.wheel.classList.add('alertIcon');
                 monitor.wheel = true;
-
-                setTimeout(function () {
-
-                    hud.wheel.removeClass("alertIcon");
+                setTimeout(() => {
+                    hud.wheel.classList.remove('alertIcon');
                     delete monitor.wheel;
-
                 }, 5000);
             }
             break;
 
         case 'roll':
-
             if (monitor.roll === undefined) {
-
-                hud.roll.addClass("alertIcon");
+                hud.roll.classList.add('alertIcon');
                 monitor.roll = true;
-
-                setTimeout(function () {
-
-                    hud.roll.removeClass("alertIcon");
+                setTimeout(() => {
+                    hud.roll.classList.remove('alertIcon');
                     delete monitor.roll;
-
                 }, 5000);
             }
             break;
 
         case 'speedLimit':
-
-            hud.speedLimit.html(value);
+            hud.speedLimit.textContent = value;
             break;
 
         case 'overSpeed':
-
             if (value === 1) {
-
-                hud.speedLimit.css("color", "red");
-                hud.speedLimit.addClass("blink");
+                hud.speedLimit.style.color = 'red';
+                hud.speedLimit.classList.add('blink');
                 monitor.overSpeed = true;
-
             } else {
-
-                hud.speedLimit.css("color", "white");
-                hud.speedLimit.removeClass("blink");
+                hud.speedLimit.style.color = 'white';
+                hud.speedLimit.classList.remove('blink');
             }
             break;
     }
 }
 
+/**
+ * Show action information (marker enter)
+ * @param {object} value - Zone action data
+ */
 function actionInfo(value) {
+    actionWrapper.innerHTML = '';
 
-    actionWrapper.empty();
+    const aInfo = document.querySelector('.actionInformation').cloneNode(true);
+    aInfo.classList.remove('template');
+    aInfo.classList.add('aInfo');
 
-    let aInfo = $(".actionInformation").clone();
-    aInfo.removeClass("template").addClass("aInfo");
+    $('.msgCompanyName', aInfo).textContent = value.name || '';
+    $('.msgDescription', aInfo).textContent = value.description || '';
+    $('.msgActionMsg', aInfo).textContent = value.message || '';
 
-    aInfo.find(".msgCompanyName").html(value.name);
-    aInfo.find(".msgDescription").html(value.description);
-    aInfo.find(".msgActionMsg").html(value.message);
-    aInfo.fadeIn();
-    actionWrapper.html(aInfo);
+    aInfo.style.display = '';
+    actionWrapper.appendChild(aInfo);
 }
 
-let persistentNotifs = {};
+/**
+ * Create a notification element
+ * @param {object} data - {type, text, length, style}
+ * @returns {HTMLElement}
+ */
+function createNotification(data) {
+    const notification = document.createElement('div');
+    notification.classList.add('notification', data.type);
+    notification.innerHTML = data.text;
 
-function CreateNotification(data) {
-    let $notification = $(document.createElement('div'));
-    $notification.addClass('notification').addClass(data.type);
-    $notification.html(data.text);
-    $notification.fadeIn();
-    if (data.style !== undefined) {
-        Object.keys(data.style).forEach(function (css) {
-            $notification.css(css, data.style[css])
+    if (data.style) {
+        Object.entries(data.style).forEach(([prop, val]) => {
+            notification.style[prop] = val;
         });
     }
 
-    return $notification;
+    return notification;
 }
 
+/**
+ * Show a notification
+ * @param {object} data - {type, text, length, style, persist, id}
+ */
 function ShowNotification(data) {
+    if (!data.persist) {
+        const notification = createNotification(data);
+        generalWrapper.appendChild(notification);
 
-    if (data.persist === undefined) {
-
-        let $notification = CreateNotification(data);
-        generalWrapper.append($notification);
-
-        setTimeout(function () {
-            $.when($notification.fadeOut()).done(function () {
-                $notification.remove();
-            });
-        }, data.length != null ? data.length : 8000);
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s';
+            setTimeout(() => notification.remove(), 300);
+        }, data.length || 8000);
 
     } else {
         if (data.persist.toUpperCase() === 'START') {
-            if (persistentNotifs[data.id] === undefined) {
-                let $notification = CreateNotification(data);
-                generalWrapper.append($notification);
-                persistentNotifs[data.id] = $notification;
+            if (!persistentNotifs[data.id]) {
+                const notification = createNotification(data);
+                generalWrapper.appendChild(notification);
+                persistentNotifs[data.id] = notification;
             } else {
-                let $notification = $(persistentNotifs[data.id]);
-                $notification.addClass('notification').addClass(data.type);
-                $notification.html(data.text);
-
-                if (data.style !== undefined) {
-                    Object.keys(data.style).forEach(function (css) {
-                        $notification.css(css, data.style[css])
+                const notification = persistentNotifs[data.id];
+                notification.className = `notification ${data.type}`;
+                notification.innerHTML = data.text;
+                if (data.style) {
+                    Object.entries(data.style).forEach(([prop, val]) => {
+                        notification.style[prop] = val;
                     });
                 }
             }
         } else if (data.persist.toUpperCase() === 'END') {
-            let $notification = $(persistentNotifs[data.id]);
-            $.when($notification.fadeOut()).done(function () {
-                $notification.remove();
-                delete persistentNotifs[data.id];
-            });
+            const notification = persistentNotifs[data.id];
+            if (notification) {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    notification.remove();
+                    delete persistentNotifs[data.id];
+                }, 300);
+            }
         }
+    }
+}
+
+/**
+ * Close HUD element with fade
+ * @param {string} selector
+ */
+function closeHud(selector) {
+    const el = document.querySelector(selector);
+    if (el) {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.3s';
+        setTimeout(() => el.remove(), 300);
     }
 }

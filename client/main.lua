@@ -124,20 +124,22 @@ end)
 
 
 -- CHECKPOINT HANDLE - Enter / Exit marker events
+-- OPTIMIZED: Squared distance comparison (no sqrt), early exit when not driving
 Citizen.CreateThread(function()
 
     while not ECO.LOADED.allZones do Citizen.Wait(1000) end
 
-    local closestZones, coords, distance, currentZone, isInMarker, zones
+    local closestZones, coords, distSq, currentZone, isInMarker, zones
+    local MARKER_DIST_SQ = 36      -- 6^2 meters
+    local RENDER_DIST_SQ = 22500   -- 150^2 meters
 
     while true do
 
         Citizen.Wait(1000)
 
-        -- ZONALISTA VÁLTÁS
         zones = ECO.zones
 
-        if ECO.PLAYER.isApprovedDriver then
+        if ECO.PLAYER.isApprovedDriver and _PlayerPedId then
 
             coords = GetEntityCoords(_PlayerPedId)
             isInMarker = false
@@ -146,10 +148,19 @@ Citizen.CreateThread(function()
 
             for k, v in pairs(zones) do
 
-                distance = #(coords - v['actionpoint'][1][1])
+                local zoneCoord = v['actionpoint'][1][1]
+                local dx = coords.x - zoneCoord.x
+                local dy = coords.y - zoneCoord.y
+                local dz = coords.z - zoneCoord.z
+                distSq = dx*dx + dy*dy + dz*dz
 
-                if distance < 150 then table.insert(closestZones, k) end
-                if distance < 6 then isInMarker = true currentZone = k end
+                if distSq < RENDER_DIST_SQ then
+                    closestZones[#closestZones + 1] = k
+                end
+                if distSq < MARKER_DIST_SQ then
+                    isInMarker = true
+                    currentZone = k
+                end
             end
 
             ECO.closestZones = closestZones
@@ -157,7 +168,6 @@ Citizen.CreateThread(function()
             if (isInMarker and not hasAlreadyEnteredMarker) or (isInMarker and lastZone ~= currentZone) then
                 hasAlreadyEnteredMarker = true
                 lastZone = currentZone
-
                 TriggerEvent('eco_cargo:hasEnteredMarker', currentZone)
             end
 
@@ -192,9 +202,10 @@ AddEventHandler('eco_cargo:hasExitedMarker', function(itemIndex)
     sendHudActionData({}, 'close')
 end)
 
--- Display Action points markers
--- Display Action points markers
--- OPTIMIZED: Sleep when no zones nearby, frame-accurate when in zone
+-- Display Action points markers + Key input handler
+-- OPTIMIZED: Separated marker rendering from game logic
+--   - DrawMarker: Wait(0) only when zones are nearby
+--   - Key input: only checked when there's an active action
 Citizen.CreateThread(function()
 
     while not ECO.LOADED.allZones do Citizen.Wait(1000) end
@@ -208,7 +219,7 @@ Citizen.CreateThread(function()
 
         if index[1] and ECO.PLAYER.isApprovedDriver then
 
-            -- Key controls
+            -- Key controls (only when in marker)
             if currentAction then
 
                 if IsControlJustReleased(0, 38) then

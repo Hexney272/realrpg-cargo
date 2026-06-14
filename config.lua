@@ -1,6 +1,38 @@
 Config = {}
 Config.Locale = 'hu'
 
+-- ============================================================
+-- DISCORD WEBHOOK
+-- ============================================================
+Config.discord = {
+    enabled = true,
+    webhookUrl = '', -- Paste your Discord webhook URL here
+    botName = 'ECO Cargo',
+    botAvatar = '', -- Optional: bot avatar URL
+
+    -- Which events to log
+    events = {
+        missionRegistered = true,   -- Mission protection requested
+        cargoStarted = true,        -- Cargo delivery started
+        cargoDelivered = true,      -- Cargo delivered successfully
+        cargoStolen = true,         -- Cargo was stolen
+        cargoDestroyed = true,      -- Cargo/trailer destroyed
+    },
+
+    -- Embed colors (decimal)
+    colors = {
+        missionRegistered = 16744192,   -- Orange
+        cargoStarted = 3066993,         -- Green
+        cargoDelivered = 3447003,       -- Dark Green
+        cargoStolen = 15158332,         -- Red
+        cargoDestroyed = 10038562,      -- Dark Red
+    }
+}
+
+-- ============================================================
+-- GENERAL SETTINGS
+-- ============================================================
+
 -- MULTI CHARACTER
 -- If true then wait for 'esx:kashloaded' trigger! -- README.MD
 Config.kashacters = false
@@ -207,6 +239,121 @@ Config.title = {
     { distance = 10000, rank = 4 }, -- King of the Road,
     { distance = 12000, rank = 4 }, -- Legend,
     { distance = 14500, rank = 5 }, -- Divine Champion,
+}
+
+-- ============================================================
+-- ACHIEVEMENTS
+-- ============================================================
+-- Each achievement has:
+--   id: unique identifier (stored in DB)
+--   name: locale key for display name
+--   description: locale key for description
+--   icon: material icon name
+--   condition: function(stats) that returns true when achieved
+Config.achievements = {
+    {
+        id = 'first_delivery',
+        name = 'achievement_first_delivery',
+        description = 'achievement_first_delivery_desc',
+        icon = 'local_shipping',
+        condition = function(stats)
+            return (stats.done_delivery or 0) + (stats.done_mission or 0) >= 1
+        end
+    },
+    {
+        id = 'road_warrior',
+        name = 'achievement_road_warrior',
+        description = 'achievement_road_warrior_desc',
+        icon = 'directions_car',
+        condition = function(stats)
+            return (stats.distance or 0) >= 500
+        end
+    },
+    {
+        id = 'marathon_runner',
+        name = 'achievement_marathon_runner',
+        description = 'achievement_marathon_runner_desc',
+        icon = 'emoji_events',
+        condition = function(stats)
+            return (stats.distance or 0) >= 2000
+        end
+    },
+    {
+        id = 'perfectionist',
+        name = 'achievement_perfectionist',
+        description = 'achievement_perfectionist_desc',
+        icon = 'star',
+        condition = function(stats)
+            local allDone = (stats.done_delivery or 0) + (stats.done_mission or 0)
+            if allDone < 10 then return false end
+            local qualityRate = (stats.goods_quality or 0) / allDone
+            return qualityRate >= 98
+        end
+    },
+    {
+        id = 'veteran',
+        name = 'achievement_veteran',
+        description = 'achievement_veteran_desc',
+        icon = 'military_tech',
+        condition = function(stats)
+            return (stats.done_delivery or 0) + (stats.done_mission or 0) >= 100
+        end
+    },
+    {
+        id = 'mission_specialist',
+        name = 'achievement_mission_specialist',
+        description = 'achievement_mission_specialist_desc',
+        icon = 'security',
+        condition = function(stats)
+            return (stats.done_mission or 0) >= 20
+        end
+    },
+    {
+        id = 'guardian',
+        name = 'achievement_guardian',
+        description = 'achievement_guardian_desc',
+        icon = 'shield',
+        condition = function(stats)
+            return (stats.defender or 0) >= 10
+        end
+    },
+    {
+        id = 'danger_lover',
+        name = 'achievement_danger_lover',
+        description = 'achievement_danger_lover_desc',
+        icon = 'whatshot',
+        condition = function(stats)
+            return (stats.vulnerable or 0) >= 50
+        end
+    },
+    {
+        id = 'ironman',
+        name = 'achievement_ironman',
+        description = 'achievement_ironman_desc',
+        icon = 'fitness_center',
+        condition = function(stats)
+            return (stats.working_time or 0) >= 36000 -- 10 hours
+        end
+    },
+    {
+        id = 'thief',
+        name = 'achievement_thief',
+        description = 'achievement_thief_desc',
+        icon = 'visibility_off',
+        condition = function(stats)
+            return (stats.stolen_delivery or 0) + (stats.stolen_mission or 0) >= 5
+        end
+    },
+    {
+        id = 'legend',
+        name = 'achievement_legend',
+        description = 'achievement_legend_desc',
+        icon = 'workspace_premium',
+        condition = function(stats)
+            return (stats.distance or 0) >= 10000 and
+                   (stats.done_delivery or 0) + (stats.done_mission or 0) >= 500
+        end
+    },
 }
 
 -- ILLEGAL TARGETS
