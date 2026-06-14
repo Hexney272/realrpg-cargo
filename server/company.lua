@@ -108,78 +108,98 @@ end
 -- COMPANY CRUD
 -- ============================================================
 
---- Create a new company
-lib.callback.register('realrpg_cargo:company:create', function(source, data)
-    local success, result = pcall(function()
-        local xPlayer = ESX.GetPlayerFromId(source)
-        if not xPlayer then return { success = false, message = 'Játékos nem található' } end
-
-        local identifier = xPlayer.identifier
-        local name = data and data.name or nil
-
-        -- Validations
-        if not name or #name < Config.company.nameMinLength or #name > Config.company.nameMaxLength then
-            return { success = false, message = 'A cégnév hossza ' .. Config.company.nameMinLength .. '-' .. Config.company.nameMaxLength .. ' karakter között kell legyen' }
-        end
-
-        -- Check if player already owns a company
-        local existing = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `owner_identifier` = ?', { identifier })
-        if existing and existing[1] then
-            return { success = false, message = 'Már van egy vállalkozásod!' }
-        end
-
-        -- Check if player is already employed somewhere
-        local employed = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
-        if employed and employed[1] then
-            return { success = false, message = 'Már dolgozol egy vállalkozásnál! Előbb lépj ki.' }
-        end
-
-        -- Check if name taken
-        local nameTaken = MySQL.query.await('SELECT `id` FROM `realrpg_cargo_companies` WHERE `name` = ?', { name })
-        if nameTaken and nameTaken[1] then
-            return { success = false, message = 'Ez a cégnév már foglalt!' }
-        end
-
-        -- Check money (bank + cash combined)
-        local funds = getPlayerFunds(xPlayer)
-        if funds < Config.company.registrationFee then
-            return { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft (neked van: ' .. funds .. ' Ft)' }
-        end
-
-        -- Deduct money and create
-        local moneyRemoved = removePlayerMoney(xPlayer, Config.company.registrationFee)
-        if not moneyRemoved then
-            return { success = false, message = 'Pénz levonás sikertelen!' }
-        end
-
-        local insertId = MySQL.insert.await([[
-            INSERT INTO `realrpg_cargo_companies` (`name`, `owner_identifier`, `description`)
-            VALUES (?, ?, ?)
-        ]], { name, identifier, (data and data.description) or '' })
-
-        if not insertId then
-            addPlayerMoney(xPlayer, Config.company.registrationFee)
-            return { success = false, message = 'Adatbázis hiba! Pénz visszautalva.' }
-        end
-
-        -- Add owner as employee
-        MySQL.insert.await([[
-            INSERT INTO `realrpg_cargo_employees` (`company_id`, `identifier`, `role`, `salary`)
-            VALUES (?, ?, 'owner', 0)
-        ]], { insertId, identifier })
-
-        -- Transaction record
-        addTransaction(insertId, 'registration', -Config.company.registrationFee, 'Cégalapítási díj', identifier)
-
-        return { success = true, message = 'Vállalkozás sikeresen létrehozva!', companyId = insertId }
-    end)
-
-    if not success then
-        print('[RealRPG Cargo] Company create error: ' .. tostring(result))
-        return { success = false, message = 'Szerver hiba: ' .. tostring(result) }
+--- Create a new company (via server event - no freeze on error)
+RegisterNetEvent('realrpg_cargo:company:tryCreate', function(data)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Játékos nem található' })
+        return
     end
 
-    return result
+    local identifier = xPlayer.identifier
+    local name = data and data.name or nil
+
+    -- Validations
+    if not name or #name < Config.company.nameMinLength or #name > Config.company.nameMaxLength then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'A cégnév hossza ' .. Config.company.nameMinLength .. '-' .. Config.company.nameMaxLength .. ' karakter között kell legyen' })
+        return
+    end
+
+    -- Check if player already owns a company
+    local ok, existing = pcall(MySQL.query.await, 'SELECT `id` FROM `realrpg_cargo_companies` WHERE `owner_identifier` = ?', { identifier })
+    if not ok then
+        print('[RealRPG Cargo] DB Error: ' .. tostring(existing))
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Adatbázis hiba: ' .. tostring(existing) })
+        return
+    end
+    if existing and existing[1] then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Már van egy vállalkozásod!' })
+        return
+    end
+
+    -- Check if player is already employed somewhere
+    local ok2, employed = pcall(MySQL.query.await, 'SELECT `id` FROM `realrpg_cargo_employees` WHERE `identifier` = ?', { identifier })
+    if not ok2 then
+        print('[RealRPG Cargo] DB Error: ' .. tostring(employed))
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Adatbázis hiba: ' .. tostring(employed) })
+        return
+    end
+    if employed and employed[1] then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Már dolgozol egy vállalkozásnál!' })
+        return
+    end
+
+    -- Check if name taken
+    local ok3, nameTaken = pcall(MySQL.query.await, 'SELECT `id` FROM `realrpg_cargo_companies` WHERE `name` = ?', { name })
+    if not ok3 then
+        print('[RealRPG Cargo] DB Error: ' .. tostring(nameTaken))
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Adatbázis hiba: ' .. tostring(nameTaken) })
+        return
+    end
+    if nameTaken and nameTaken[1] then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Ez a cégnév már foglalt!' })
+        return
+    end
+
+    -- Check money
+    local funds = getPlayerFunds(xPlayer)
+    if funds < Config.company.registrationFee then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Nincs elég pénzed! Szükséges: ' .. Config.company.registrationFee .. ' Ft (van: ' .. funds .. ' Ft)' })
+        return
+    end
+
+    -- Deduct money
+    local moneyRemoved = removePlayerMoney(xPlayer, Config.company.registrationFee)
+    if not moneyRemoved then
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Pénz levonás sikertelen!' })
+        return
+    end
+
+    -- Create company
+    local ok4, insertId = pcall(MySQL.insert.await, [[
+        INSERT INTO `realrpg_cargo_companies` (`name`, `owner_identifier`, `description`)
+        VALUES (?, ?, ?)
+    ]], { name, identifier, (data and data.description) or '' })
+
+    if not ok4 or not insertId then
+        addPlayerMoney(xPlayer, Config.company.registrationFee)
+        print('[RealRPG Cargo] DB Error: ' .. tostring(insertId))
+        TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = false, message = 'Adatbázis hiba: ' .. tostring(insertId) })
+        return
+    end
+
+    -- Add owner as employee
+    pcall(MySQL.insert.await, [[
+        INSERT INTO `realrpg_cargo_employees` (`company_id`, `identifier`, `role`, `salary`)
+        VALUES (?, ?, 'owner', 0)
+    ]], { insertId, identifier })
+
+    -- Transaction record
+    addTransaction(insertId, 'registration', -Config.company.registrationFee, 'Cégalapítási díj', identifier)
+
+    print('[RealRPG Cargo] Company created: ' .. name .. ' by ' .. identifier)
+    TriggerClientEvent('realrpg_cargo:company:createResult', _source, { success = true, message = 'Vállalkozás "' .. name .. '" sikeresen létrehozva!' })
 end)
 
 --- Get player's company data (dashboard)

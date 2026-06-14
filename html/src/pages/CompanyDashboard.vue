@@ -263,14 +263,10 @@ async function createCompany() {
     alert('Kérlek adj meg egy cégnevet!')
     return
   }
-  const result = await post('company_create', { name: newCompanyName.value, description: newCompanyDesc.value })
-  if (result && result.success) {
-    await loadData()
-  } else if (result && result.message) {
-    alert(result.message)
-  } else {
-    alert('Hiba történt a cég létrehozásakor. Ellenőrizd hogy importáltad-e a realrpg_cargo_company.sql fájlt az adatbázisba!')
-  }
+  // Send request - response comes via Lua notification (DoCustomHudText)
+  await post('company_create', { name: newCompanyName.value, description: newCompanyDesc.value })
+  // Close the panel - if successful, notification will show and player can reopen
+  // The Lua side handles success/error notifications
 }
 
 async function acceptInvite(inviteId) {

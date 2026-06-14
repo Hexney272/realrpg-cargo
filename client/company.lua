@@ -41,8 +41,21 @@ end)
 
 --- Create company
 RegisterNUICallback('company_create', function(data, cb)
-    local result = lib.callback.await('realrpg_cargo:company:create', false, data)
-    cb(json.encode(result or { success = false, message = 'Szerver hiba' }))
+    -- Use server event instead of lib.callback to avoid freeze on error
+    TriggerServerEvent('realrpg_cargo:company:tryCreate', data)
+    cb(json.encode({ success = true, message = 'Feldolgozás...' }))
+end)
+
+-- Response from server
+RegisterNetEvent('realrpg_cargo:company:createResult', function(result)
+    if result and result.success then
+        DoCustomHudText('success', result.message or 'Cég létrehozva!', 5000)
+        -- Reopen company panel to show dashboard
+        SetNuiFocus(true, true)
+        SendNUIMessage({ subject = 'COMPANY', data = {} })
+    else
+        DoCustomHudText('fail', result and result.message or 'Hiba történt a cégalapításnál!', 8000)
+    end
 end)
 
 --- Disband company
