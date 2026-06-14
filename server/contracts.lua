@@ -7,9 +7,18 @@
     company_id = 0 means "available to all"
 ]]
 
+print("[RealRPG Cargo] contracts.lua loaded")
 if not Config.company or not Config.company.enabled then return end
 
-print('[RealRPG Cargo] contracts.lua loaded')
+local function hasPermission(role, permission)
+    local roleConfig = Config.company.roles[role]
+    if not roleConfig then return false end
+    if roleConfig.permissions[1] == 'all' then return true end
+    for _, perm in ipairs(roleConfig.permissions) do
+        if perm == permission then return true end
+    end
+    return false
+end
 
 -- ============================================================
 -- CONTRACT GENERATOR
