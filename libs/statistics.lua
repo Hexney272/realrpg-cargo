@@ -7,16 +7,15 @@
 
 RegisterCommand('cargostat', function()
 
-    ESX.TriggerServerCallback('eco_cargo:getStatistics', function(result)
+    local result = lib.callback.await('eco_cargo:getStatistics', false)
 
-        SetNuiFocus(true, true)
+    SetNuiFocus(true, true)
 
-        SendNUIMessage({
-            subject = 'STATISTICS',
-            operation = 'open',
-            data = result[1] and result[1] or {}
-        })
-    end)
+    SendNUIMessage({
+        subject = 'STATISTICS',
+        operation = 'open',
+        data = result[1] and result[1] or {}
+    })
 end)
 
 RegisterNUICallback('myStatistics', function(data, cb)
@@ -28,21 +27,20 @@ end)
 
 RegisterNUICallback('getAllStatistics', function(data, cb)
 
-    ESX.TriggerServerCallback('eco_cargo:getAllStatistics', function(result)
+    local result = lib.callback.await('eco_cargo:getAllStatistics', false, data)
 
-        if result[1] then
+    if result[1] then
 
-            for i = 1, #result do
+        for i = 1, #result do
 
-                result[i].rank = statAnalysis(Config.rank, result[i])
-                result[i].title = statAnalysis(Config.title, result[i])
-                result[i].titleLabel = _('title' .. result[i].title)
-                result[i].rankLabel = _('rank' .. result[i].rank)
-            end
+            result[i].rank = statAnalysis(Config.rank, result[i])
+            result[i].title = statAnalysis(Config.title, result[i])
+            result[i].titleLabel = _('title' .. result[i].title)
+            result[i].rankLabel = _('rank' .. result[i].rank)
         end
+    end
 
-        cb(json.encode(result))
-    end, data)
+    cb(json.encode(result))
 end)
 
 

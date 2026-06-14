@@ -33,127 +33,92 @@ local currentAction, currentActionMsg, lastZone
 
 Citizen.CreateThread(function()
 
-    --while ESX == nil do TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end) Citizen.Wait(10) end
-
+    -- Wait for ESX player to be loaded
     while not ESX.PlayerLoaded do Citizen.Wait(1000) end
 
-    ESX.TriggerServerCallback('eco_cargo:getPlayers', function(players)
-
-        ECO.PLAYERS = players
-        ECO.LOADED.players = true
-    end)
-
-    while not ECO.LOADED.players do Citizen.Wait(10) end
+    -- LOADING PLAYER LIST
+    ECO.PLAYERS = lib.callback.await('eco_cargo:getPlayers', false)
+    ECO.LOADED.players = true
 
     if Config.kashacters then
 
         local serverId = GetPlayerServerId(PlayerId())
 
         if not ECO.PLAYERS[serverId] then
-
             while not selectCharacters do Citizen.Wait(2000) end
         end
     end
 
     -- LOADING PLAYER DATA
-    ESX.TriggerServerCallback('eco_cargo:getPlayer', function(player)
-
-        ECO.PLAYER = player
-        ECO.PLAYER.cargoRequestTime = 0
-        ECO.LOADED.player = true
-    end)
-
-    while not ECO.LOADED.player do Citizen.Wait(10) end
-
+    local player = lib.callback.await('eco_cargo:getPlayer', false)
+    ECO.PLAYER = player
+    ECO.PLAYER.cargoRequestTime = 0
+    ECO.LOADED.player = true
 
     -- LOADING MISSION DATA
-    ESX.TriggerServerCallback('eco_cargo:getMission', function(mission)
-
-        ECO.MISSION = mission
-        ECO.LOADED.mission = true
-    end)
-
-    while not ECO.LOADED.mission do Citizen.Wait(10) end
-
+    ECO.MISSION = lib.callback.await('eco_cargo:getMission', false)
+    ECO.LOADED.mission = true
 
     -- LOADING DATABASE: ZONE DATA
-    ESX.TriggerServerCallback('eco_cargo:getZones', function(zones)
+    local zones = lib.callback.await('eco_cargo:getZones', false)
 
-        if zones and next(zones) ~= nil then
+    if zones and next(zones) ~= nil then
 
-            for _, v in pairs(zones) do
+        for _, v in pairs(zones) do
 
-                ECO.allZones[v.id] = v
-                ECO.allZones[v.id].actionpoint = coordsPharser(v.actionpoint)
-                ECO.allZones[v.id].spawnpoint = coordsPharser(v.spawnpoint)
-            end
+            ECO.allZones[v.id] = v
+            ECO.allZones[v.id].actionpoint = coordsPharser(v.actionpoint)
+            ECO.allZones[v.id].spawnpoint = coordsPharser(v.spawnpoint)
         end
+    end
 
-        zones = nil
-        ECO.LOADED.allZones = true
-    end)
-
-    while not ECO.LOADED.allZones do Citizen.Wait(10) end
-
+    zones = nil
+    ECO.LOADED.allZones = true
 
     -- LOADING DATABASE: DISTANCE DATA
-    ESX.TriggerServerCallback('eco_cargo:getDistances', function(distances)
+    local distances = lib.callback.await('eco_cargo:getDistances', false)
 
-        if distances and next(distances) ~= nil then
+    if distances and next(distances) ~= nil then
 
-            for _, v in pairs(distances) do
+        for _, v in pairs(distances) do
 
-                ECO.distances[v.id] = ESX.Math.Round(v.route * 0.001, 1)
-            end
+            ECO.distances[v.id] = ESX.Math.Round(v.route * 0.001, 1)
         end
+    end
 
-        distances = nil
-        ECO.LOADED.distances = true
-    end)
-
-    while not ECO.LOADED.distances do Citizen.Wait(10) end
-
+    distances = nil
+    ECO.LOADED.distances = true
 
     -- LOADING DATABASE: PRODUCT DATA
-    ESX.TriggerServerCallback('eco_cargo:getProducts', function(products, loadingZonesIds)
+    local products, loadingZonesIds = lib.callback.await('eco_cargo:getProducts', false)
 
-        if products and next(products) ~= nil then
+    if products and next(products) ~= nil then
 
-            ECO.allProducts = products
+        ECO.allProducts = products
 
-            for k, _ in pairs(loadingZonesIds) do
+        for k, _ in pairs(loadingZonesIds) do
 
-                ECO.loadingZones[#ECO.loadingZones + 1] = ECO.allZones[k]
-            end
+            ECO.loadingZones[#ECO.loadingZones + 1] = ECO.allZones[k]
         end
+    end
 
-        products = nil
-        ECO.LOADED.loadingZones = true
-        ECO.LOADED.allProducts = true
-    end)
-
+    products = nil
+    ECO.LOADED.loadingZones = true
+    ECO.LOADED.allProducts = true
 
     _PlayerPedId = PlayerPedId()
 end)
 
 
-RegisterNetEvent('esx:setJob')
-AddEventHandler('esx:setJob', function(job)
-
+RegisterNetEvent('esx:setJob', function(job)
     ECO.PLAYER.job = job
 end)
 
-
-RegisterNetEvent('playerSpawned')
-AddEventHandler('playerSpawned', function()
-
+RegisterNetEvent('playerSpawned', function()
     ESX.PlayerLoaded = true
 end)
 
-
-RegisterNetEvent('esx:kashloaded')
-AddEventHandler('esx:kashloaded', function()
-
+RegisterNetEvent('esx:kashloaded', function()
     selectCharacters = true
 end)
 
@@ -228,15 +193,15 @@ AddEventHandler('eco_cargo:hasExitedMarker', function(itemIndex)
 end)
 
 -- Display Action points markers
+-- Display Action points markers
+-- OPTIMIZED: Sleep when no zones nearby, frame-accurate when in zone
 Citizen.CreateThread(function()
 
     while not ECO.LOADED.allZones do Citizen.Wait(1000) end
 
-    local index, item, zones, p2pDistance
+    local index, item, zones
 
     while true do
-
-        Citizen.Wait(0)
 
         index = ECO.closestZones
         zones = ECO.zones
@@ -256,25 +221,9 @@ Citizen.CreateThread(function()
                     if currentAction == 'delivery_of_goods' then
 
                         ECO.CARGO.showPayData = true
-                        local report = createCargoReport(ECO.CARGO)
 
-                        -- PAYMENT
-                        local amount = tonumber(report.payData.payable)
-                        local societyAmount = tonumber(report.payData.defenderSocietyPayable)
-                        local moneyType = ECO.CARGO.stolen and Config.stolenCargoPaymentType or 'money'
-
-                        if type(amount) == 'number' and amount > 0 then
-
-                            TriggerServerEvent('eco_cargo:addMoney', amount, moneyType)
-                        end
-
-                        if type(societyAmount) == 'number' and societyAmount > 0 then
-
-                            TriggerServerEvent('eco_cargo:societyAddMoney', societyAmount, report.product.defender)
-                        end
-
-                        -- REPORT
-                        openNUI(report, "CARGO_REPORT")
+                        -- SECURE: Server handles payment calculation
+                        TriggerServerEvent('eco_cargo:deliverCargo', ECO.CARGO.trailerPlate)
 
                         DetachVehicleFromTrailer(ECO.Vehicle)
                         Citizen.Wait(300)
@@ -284,56 +233,53 @@ Citizen.CreateThread(function()
 
                     elseif currentAction == 'open_freight_list' then
 
-                        ESX.TriggerServerCallback('eco_cargo:getServerTime', function(serverTimeStamp)
+                        local serverTimeStamp = lib.callback.await('eco_cargo:getServerTime', false)
 
-                            local loadingPositionId = currentActionData['id']
-                            local zoneProductsIds = getZoneProductsIds(loadingPositionId)
-                            local products = {}
-                            local destinationZones, destinationIds, distance, km, cId, propertyNames
+                        local loadingPositionId = currentActionData['id']
+                        local zoneProductsIds = getZoneProductsIds(loadingPositionId)
+                        local products = {}
+                        local destinationZones, destinationIds, distance, km, cId, propertyNames
 
-                            if next(zoneProductsIds) then
+                        if next(zoneProductsIds) then
 
-                                for productId, v in pairs(zoneProductsIds) do
+                            for productId, v in pairs(zoneProductsIds) do
 
-                                    local product = deepCopy(ECO.allProducts[productId])
-                                    local lastStartTime = product.loading[loadingPositionId]
+                                local product = deepCopy(ECO.allProducts[productId])
+                                local lastStartTime = product.loading[loadingPositionId]
 
-                                    product.remainingTime = remainingTime(lastStartTime, product.reproduction_time, serverTimeStamp)
-                                    product.remainingTimeDisplay = ''
+                                product.remainingTime = remainingTime(lastStartTime, product.reproduction_time, serverTimeStamp)
+                                product.remainingTimeDisplay = ''
 
-                                    if product.remainingTime ~= 0 then
+                                if product.remainingTime ~= 0 then
 
-                                        local timeValue, timeUnit = displayTime(product.remainingTime)
-                                        product.remainingTimeDisplay = string.format("%s %s", timeValue, _(timeUnit))
-                                    end
-
-
-                                    product.label = _(product.name)
-                                    product.defenderLabel = product.defender == '' and '' or _(product.defender)
-
-
-                                    destinationIds = json.decode(product.destination)
-                                    propertyNames = json.decode(product.properties)
-                                    product.params = calculateParams(propertyNames)
-
-                                    product.destinationZones = {}
-
-                                    for j = 1, #destinationIds do
-
-                                        cId = tonumber(concatId(loadingPositionId, destinationIds[j], '', true))
-                                        distance = getValue(ECO.distances, cId, 0)
-
-                                        product.destinationZones[j] = deepCopy(ECO.allZones[destinationIds[j]])
-                                        product.destinationZones[j].distance = distance
-                                        product.destinationZones[j].priceData = calculatePrice(propertyNames, distance, product)
-                                    end
-
-                                    table.insert(products, product)
+                                    local timeValue, timeUnit = displayTime(product.remainingTime)
+                                    product.remainingTimeDisplay = string.format("%s %s", timeValue, _(timeUnit))
                                 end
-                            end
 
-                            openNUI(products, "CARGO_SELECT")
-                        end)
+                                product.label = _(product.name)
+                                product.defenderLabel = product.defender == '' and '' or _(product.defender)
+
+                                destinationIds = json.decode(product.destination)
+                                propertyNames = json.decode(product.properties)
+                                product.params = calculateParams(propertyNames)
+
+                                product.destinationZones = {}
+
+                                for j = 1, #destinationIds do
+
+                                    cId = tonumber(concatId(loadingPositionId, destinationIds[j], '', true))
+                                    distance = getValue(ECO.distances, cId, 0)
+
+                                    product.destinationZones[j] = deepCopy(ECO.allZones[destinationIds[j]])
+                                    product.destinationZones[j].distance = distance
+                                    product.destinationZones[j].priceData = calculatePrice(propertyNames, distance, product)
+                                end
+
+                                table.insert(products, product)
+                            end
+                        end
+
+                        openNUI(products, "CARGO_SELECT")
                     end
 
                     currentAction = nil
@@ -346,19 +292,18 @@ Citizen.CreateThread(function()
                 item = zones[index[i]]
 
                 if item then
-
                     DrawMarker(23, item['actionpoint'][1][1], 0.0, 0.0, 0.0, 0, 0.0, 0.0, 6.0, 6.0, 0.5, 255, 0, 0, 255, false, false, 2, false, false, false, false)
                 end
             end
-        else
 
+            Citizen.Wait(0)
+        else
             Citizen.Wait(1000)
         end
     end
 end)
 
-RegisterNetEvent('eco_cargo:changeMonitorOwner')
-AddEventHandler('eco_cargo:changeMonitorOwner', function(trailerPlate, newOwner)
+RegisterNetEvent('eco_cargo:changeMonitorOwner', function(trailerPlate, newOwner)
 
     -- changeMonitorOwner
     if ECO.CARGO.trailerPlate == trailerPlate then
@@ -417,55 +362,54 @@ RegisterNUICallback('registerCargo', function(data, cb)
 
     if startPermission then
 
-        ESX.TriggerServerCallback('eco_cargo:getRemainingTime', function(remainingTime)
+        local remainingTime = lib.callback.await('eco_cargo:getRemainingTime', false, data)
 
-            if remainingTime == 0 then
+        if remainingTime == 0 then
 
-                local trailer = trailerSpawn(currentActionData['spawnpoint'], data.productId)
+            local trailer = trailerSpawn(currentActionData['spawnpoint'], data.productId)
 
-                if trailer then
+            if trailer then
 
-                    ECO.PLAYER.cargoRequestTime = GetGameTimer()
+                ECO.PLAYER.cargoRequestTime = GetGameTimer()
 
-                    ECO.CARGO = {
-                        -- TRAILER
-                        trailer = trailer,
-                        trailerHealth = 1000,
-                        trailerModel = data.trailerModel,
-                        trailerPlate = safePlate(GetVehicleNumberPlateText(trailer)),
-                        stolen = false,
+                ECO.CARGO = {
+                    -- TRAILER
+                    trailer = trailer,
+                    trailerHealth = 1000,
+                    trailerModel = data.trailerModel,
+                    trailerPlate = safePlate(GetVehicleNumberPlateText(trailer)),
+                    stolen = false,
 
-                        -- PRODUCT
-                        productId = data.productId,
+                    -- PRODUCT
+                    productId = data.productId,
 
-                        -- MONITOR
-                        monitorOwner = ECO.PLAYER.serverId,
-                        quality = 100,
-                        params = json.decode(data.params),
+                    -- MONITOR
+                    monitorOwner = ECO.PLAYER.serverId,
+                    quality = 100,
+                    params = json.decode(data.params),
 
-                        -- MONEY
-                        freightFee = data.freightFee,
-                        illegalPrice = data.illegalPrice,
-                        goodsValue = data.goodsValue,
-                        cautionMoney = data.cautionMoney,
+                    -- MONEY
+                    freightFee = data.freightFee,
+                    illegalPrice = data.illegalPrice,
+                    goodsValue = data.goodsValue,
+                    cautionMoney = data.cautionMoney,
 
-                        -- ZONE
-                        km = data.km,
-                        destinationZoneId = data.destinationId,
-                        loadingZoneId = data.loadingZoneId,
+                    -- ZONE
+                    km = data.km,
+                    destinationZoneId = data.destinationId,
+                    loadingZoneId = data.loadingZoneId,
 
-                        -- OWNER
-                        owner = ECO.PLAYER
-                    }
+                    -- OWNER
+                    owner = ECO.PLAYER
+                }
 
-                    TriggerServerEvent('eco_cargo:cargoRegister', ECO.CARGO)
-                end
-            else
-
-                local timeValue, timeUnit = displayTime(remainingTime)
-                DoCustomHudText('fail', _('cargo_not_available', timeValue, _(timeUnit)))
+                TriggerServerEvent('eco_cargo:cargoRegister', ECO.CARGO)
             end
-        end, data)
+        else
+
+            local timeValue, timeUnit = displayTime(remainingTime)
+            DoCustomHudText('fail', _('cargo_not_available', timeValue, _(timeUnit)))
+        end
     else
 
         DoCustomHudText('fail', permissionMsg)
@@ -479,6 +423,17 @@ RegisterNUICallback('exit', function(data, cb)
 
     SetNuiFocus(false, false)
     cb('ok')
+end)
+
+-- SECURE: Receive payment data from server after delivery
+RegisterNetEvent('eco_cargo:paymentProcessed', function(paymentData)
+
+    -- Show the cargo report with server-calculated payment
+    local report = createCargoReport(ECO.CARGO)
+    report.payData = paymentData
+    report.showPayData = true
+
+    openNUI(report, "CARGO_REPORT")
 end)
 
 
@@ -505,16 +460,13 @@ RegisterCommand('inspect', function()
         return false
     end
 
-    ESX.TriggerServerCallback('eco_cargo:getDataByPlate', function(data)
+    local data = lib.callback.await('eco_cargo:getDataByPlate', false, GetVehicleNumberPlateText(vehicle))
 
-        if data then
-
-            openNUI(createCargoReport(data), "CARGO_REPORT")
-        else
-
-            DoCustomHudText('fail', _('no_information'))
-        end
-    end, GetVehicleNumberPlateText(vehicle))
+    if data then
+        openNUI(createCargoReport(data), "CARGO_REPORT")
+    else
+        DoCustomHudText('fail', _('no_information'))
+    end
 end)
 
 

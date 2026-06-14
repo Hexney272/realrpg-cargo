@@ -1,18 +1,30 @@
+--[[
+    ECO Cargo - English Locale
+    
+    This file provides backward compatibility with the ESX locale system.
+    For new translations, prefer editing the JSON files (locales/en.json).
+    
+    Usage: _('key') or _('key', arg1, arg2)
+]]
+
 Locales['en'] = {
+    -- SYSTEM MESSAGES
     ['open_freight_list'] = 'Accept delivery - E -',
     ['delivery_of_goods'] = 'Delivery completed! Unload cargo - E -',
     ['delivery_failed'] = 'The shipment is damaged unrecoverably! Your contract has been terminated!',
     ['goods_is_completely_damaged'] = 'The shipment is damaged unrecoverably!',
     ['add_money'] = 'You got $%s ! (%s)',
-    ['add_society_money'] = 'Defender fraciton: %s received their payment: $%s!',
+    ['add_society_money'] = 'Defender faction: %s received their payment: $%s!',
     ['remove_money'] = '$%s paid!',
     ['zone_blip_name'] = 'Freight',
     ['promotion_message'] = 'Collect kilometers, take on missions!<br />Commands: /inspect, /mission, /cargostat',
     ['every_place_occupied'] = 'All places are occupied, the trailer cannot be rented!',
     ['you_can_attach_your_trailer'] = 'Attach your trailer!',
-    ['that_way_you_cant_scan_anything'] = 'You can not isnpect the trailer this way.',
+    ['that_way_you_cant_scan_anything'] = 'You cannot inspect the trailer this way.',
     ['there_are_no_vehicles_nearby'] = 'No vehicles nearby',
-    ['you_can_only_scan_a_trailer'] = 'You can isnpect only trailers',
+    ['you_can_only_scan_a_trailer'] = 'You can inspect only trailers',
+
+    -- MISSION MESSAGES
     ['request_protection'] = '%s requests security detachment for his/her cargo. Do you accept? If yes: /mission',
     ['defender_joined'] = '%s %s joined to the defenders',
     ['defender_left'] = '%s %s left the defenders',
@@ -29,15 +41,21 @@ Locales['en'] = {
     ['mission_does_not_exist'] = 'The selected mission no longer exists!',
     ['no_missions'] = 'No missions.',
     ['invited_players'] = 'The request for protection has been sent out to %s people',
-    ['too_few_defensive_players_available'] = 'The number of players that can be notified, does not reach the minimum!',
-    ['too_few_counter_players_available'] = 'There are not enough potential enemy for this mission!',
+    ['too_few_defensive_players_available'] = 'The number of players that can be notified does not reach the minimum!',
+    ['too_few_counter_players_available'] = 'There are not enough potential enemies for this mission!',
     ['cargo_not_available'] = 'Unfortunately, this shipment is not available for another %s %s',
     ['disable_mission_start_for_defenders'] = 'You cannot start a mission if your faction protects you!',
-    ['incorrect_setting'] = 'Incorrec script settings!',
+    ['incorrect_setting'] = 'Incorrect script settings!',
+
+    -- UI / HUD
     ['tempomat_speed'] = 'Tempomat: %s Km/h',
+
+    -- MONEY TYPES
     ['money'] = 'Cash',
     ['bank'] = 'Bank account',
     ['black_money'] = 'Black money',
+
+    -- TIME UNITS
     ['hour'] = 'hour',
     ['minute'] = 'minute',
     ['sec'] = 'seconds',
@@ -50,15 +68,15 @@ Locales['en'] = {
     ['gang'] = 'PlayBoys Gang',
     ['bluegang'] = 'Astecas',
     ['family'] = 'Ndrangheta',
-    ['yakuza'] = 'Łowcy Jeleni',
+    ['yakuza'] = 'Lowcy Jeleni',
     ['lostmc'] = 'Lost MC',
     ['cardem'] = 'Car Demolition',
     ['cayoperico'] = 'Cayo Perico Military',
     ['unemployed'] = 'Unemployed',
 
-    -- TRAITS
+    -- CARGO TRAITS
     ['fragile'] = 'Fragile',
-    ['refrigerate'] = 'Refrigereted',
+    ['refrigerate'] = 'Refrigerated',
     ['toxic'] = 'Toxic',
     ['corrodent'] = 'Corrosive',
     ['pollutant'] = 'Pollutant',
@@ -71,13 +89,13 @@ Locales['en'] = {
     ['high_sensitivity'] = 'High sensitivity',
 
     -- RANKS
-    ['rank1'] = 'iron',
-    ['rank2'] = 'bronze',
-    ['rank3'] = 'silver',
-    ['rank4'] = 'gold',
-    ['rank5'] = 'platinum', -- diamond
-    
-    -- RANKS
+    ['rank1'] = 'Iron',
+    ['rank2'] = 'Bronze',
+    ['rank3'] = 'Silver',
+    ['rank4'] = 'Gold',
+    ['rank5'] = 'Platinum',
+
+    -- TITLES
     ['title1'] = 'Newbie',
     ['title2'] = 'Enthusiast',
     ['title3'] = 'Skilled Worker',
@@ -114,7 +132,7 @@ Locales['en'] = {
     ['canned_beef'] = 'Canned beef',
     ['cheese'] = 'Cheese',
     ['chemicals'] = 'Chemicals',
-    ['chicken_meat'] = 'Chicken meet',
+    ['chicken_meat'] = 'Chicken meat',
     ['chlorine'] = 'Chlorine',
     ['clothes'] = 'Clothes',
     ['drink'] = 'Drinks',
@@ -129,14 +147,14 @@ Locales['en'] = {
     ['dynamite'] = 'Dynamite',
     ['electronics'] = 'Electronics',
     ['fireworks'] = 'Fireworks',
-    ['furniture'] = 'Furnitures',
+    ['furniture'] = 'Furniture',
     ['gas_pipeline_parts'] = 'Gas pipelines',
     ['glass_panels'] = 'Glass panels',
     ['heat_exchanger'] = 'Heat exchanger',
     ['helicopter_parts'] = 'Helicopter parts',
     ['high-tech_device'] = 'High-tech devices',
     ['conveyor_belt'] = 'Conveyor belt',
-    ['hospital_waste'] = 'Hospital wastes',
+    ['hospital_waste'] = 'Hospital waste',
     ['huge_tyres'] = 'Huge tires',
     ['ice_cream'] = 'Ice cream',
     ['industrial_condensator'] = 'Industrial condenser',
@@ -162,7 +180,7 @@ Locales['en'] = {
     ['used_oil'] = 'Used oil',
     ['gas'] = 'Natural gas',
     ['boat_parts'] = 'Ship parts',
-    ['coffe'] = 'Coffe',
+    ['coffe'] = 'Coffee',
     ['malt'] = 'Malt',
     ['hop'] = 'Hops',
     ['kevlar'] = 'Kevlar',
@@ -185,5 +203,5 @@ Locales['en'] = {
     ['disassembled_part'] = 'Disassembled parts',
     ['military_communication_device'] = 'Military communication device',
     ['life_support_equipment'] = 'Life support devices',
-    ['hazardous_material'] = 'Hazardous material'
+    ['hazardous_material'] = 'Hazardous material',
 }
