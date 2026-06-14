@@ -112,7 +112,15 @@ function isEmpty(obj) {
 }
 
 /**
- * Post data to NUI callback (replaces $.post)
+ * Get the resource name dynamically from FiveM NUI environment.
+ * Falls back to 'eco_cargo' if not available (e.g. during development outside FiveM).
+ */
+const RESOURCE_NAME = (typeof GetParentResourceName === 'function')
+    ? GetParentResourceName()
+    : 'eco_cargo';
+
+/**
+ * Post data to NUI callback
  * Uses XMLHttpRequest because FiveM NUI does not support fetch() for resource callbacks.
  * @param {string} eventName - NUI callback name
  * @param {object} data - Data to send
@@ -121,7 +129,7 @@ function isEmpty(obj) {
 function nuiPost(eventName, data = {}) {
     return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `https://eco_cargo/${eventName}`, true);
+        xhr.open('POST', `https://${RESOURCE_NAME}/${eventName}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
