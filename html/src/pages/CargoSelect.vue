@@ -201,45 +201,71 @@ function buildCargoData(cargo) {
 <style scoped>
 .cargo-item {
   position: relative;
-  margin: 10px 0;
-  padding: 0 10px;
-  background-color: #1d1d1d;
+  margin: 12px 0;
+  padding: 16px;
+  background: var(--color-bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-normal);
+}
+
+.cargo-item:hover {
+  border-color: var(--color-border-accent);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
 }
 
 .cargo-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
 }
 
 .icons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .property-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform var(--transition-fast);
+}
+
+.property-icon:hover {
+  transform: scale(1.15);
 }
 
 .item-header {
   position: relative;
-  margin: 10px 0;
-  padding: 10px;
-  background-color: #292929;
+  margin: 0;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.8) 0%, rgba(20, 20, 30, 0.9) 100%);
   text-transform: uppercase;
-  font-size: 26px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
   flex: 1;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-accent);
 }
 
 .item-header.disabled {
-  background-color: grey;
+  background: rgba(80, 80, 80, 0.4);
+  border-left-color: #555;
+  opacity: 0.6;
 }
 
 .cargo-data {
   display: grid;
-  grid-template-columns: 250px auto;
-  margin: 10px 0;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
 }
 
 .item-img {
@@ -247,113 +273,175 @@ function buildCargoData(cargo) {
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  width: 250px;
-  height: 140px;
+  width: 240px;
+  height: 135px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.item-img::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  pointer-events: none;
 }
 
 .available-alert.no-available {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  text-align: right;
   bottom: 0;
+  left: 0;
   right: 0;
-  background: red;
-  width: 100%;
-  padding: 5px;
-  font-weight: bold;
-  box-sizing: border-box;
-  font-size: 16px;
+  background: linear-gradient(135deg, rgba(227, 24, 55, 0.9), rgba(180, 20, 45, 0.95));
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
 }
 
 .cargo-form {
-  padding: 0 0 0 10px;
+  padding: 0;
 }
 
 .cargo-destination-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 4px;
 }
 
 .destination-row {
-  background: #292929;
+  background: rgba(30, 30, 45, 0.6);
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-sm);
 }
 
 .destination-row:hover {
-  background-color: #121212;
+  background: rgba(237, 192, 84, 0.08);
+  transform: translateX(3px);
 }
 
 .destination-row.disabled {
-  background-color: grey !important;
+  background: rgba(60, 60, 60, 0.4) !important;
   cursor: default;
+  opacity: 0.5;
+}
+
+.destination-row.disabled:hover {
+  transform: none;
 }
 
 .destination-row.tr-selected {
-  background-color: #121212;
+  background: rgba(237, 192, 84, 0.12);
+  border-left: 3px solid var(--color-accent);
 }
 
 .destination-row.in-mission {
-  background-color: #f43b14 !important;
+  background: linear-gradient(135deg, rgba(244, 59, 20, 0.2), rgba(227, 24, 55, 0.15)) !important;
+  border-left: 3px solid var(--color-mission);
 }
 
 .destination-row td {
   margin: 0;
-  padding: 5px;
-  border-bottom: 3px solid #121212;
+  padding: 8px 10px;
+  border: none;
+  vertical-align: middle;
 }
 
 .cargo-name {
   display: block;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .small {
-  font-size: 14px;
-  color: #a0a0a0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
 }
 
 .freight-fee {
   text-align: right;
-  margin-right: 15px;
-  float: right;
+  font-weight: 700;
+  color: var(--color-text-accent);
 }
 
 .cargo-distance {
   display: block;
   text-align: right;
+  color: var(--color-text-secondary);
+  font-size: 13px;
 }
 
 .mission-info {
   display: inline-block;
   float: right;
-  background: #e31837;
-  padding: 5px 10px;
+  background: linear-gradient(135deg, var(--color-danger), #c41230);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .cargo-defenders {
-  margin: 10px 0;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  background: rgba(237, 192, 84, 0.06);
+  border: 1px solid var(--color-border-accent);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
 }
 
 .cargo-actions {
-  margin: 10px 0;
+  margin: 14px 0 0;
   display: flex;
   gap: 10px;
-}
-
-.btn {
-  border: none;
-  font-size: 1.0em;
-  padding: 5px 10px;
-  cursor: pointer;
+  justify-content: flex-end;
 }
 
 .submit-btn {
-  background-color: var(--color-accent, #edc054);
-  color: #303030;
+  background: var(--gradient-accent);
+  color: #1a1a1a;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.submit-btn:hover {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
 }
 
 .mission-register-btn {
-  background-color: #ed5c11;
+  background: linear-gradient(135deg, #ed5c11, #f0a030);
   color: #fff;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.mission-register-btn:hover {
+  box-shadow: 0 0 15px rgba(237, 92, 17, 0.4);
+  transform: translateY(-2px);
 }
 </style>
