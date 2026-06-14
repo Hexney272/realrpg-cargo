@@ -113,23 +113,31 @@ function isEmpty(obj) {
 
 /**
  * Post data to NUI callback (replaces $.post)
+ * Uses XMLHttpRequest because FiveM NUI does not support fetch() for resource callbacks.
  * @param {string} eventName - NUI callback name
  * @param {object} data - Data to send
  * @returns {Promise<any>}
  */
-async function nuiPost(eventName, data = {}) {
-    try {
-        const resp = await fetch(`https://eco_cargo/${eventName}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const text = await resp.text();
-        return jsonParse(text) || text;
-    } catch (e) {
-        console.error(`[ECO CARGO] NUI Post error (${eventName}):`, e);
-        return false;
-    }
+function nuiPost(eventName, data = {}) {
+    return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://eco_cargo/${eventName}`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    resolve(jsonParse(xhr.responseText) || xhr.responseText);
+                } else {
+                    resolve(false);
+                }
+            }
+        };
+        xhr.onerror = function () {
+            console.error(`[ECO CARGO] NUI Post error (${eventName})`);
+            resolve(false);
+        };
+        xhr.send(JSON.stringify(data));
+    });
 }
 
 /**
