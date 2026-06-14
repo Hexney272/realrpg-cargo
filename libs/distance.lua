@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] distance.lua loaded')
 function calcRoute(v1, v2)
 
     local calculate, dist

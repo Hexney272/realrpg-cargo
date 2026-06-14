@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] coords.lua loaded')
 function stringToVector3(string)
 
     if not string or string == '' then return false end

@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] maintenance.lua loaded')
 --
 -- Created by IntelliJ IDEA.
 -- User: ekhion

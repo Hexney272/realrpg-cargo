@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] monitoring.lua loaded')
 --[[
     ECO Cargo - Client Monitoring
     Optimized threads for cargo state tracking and real-time monitoring

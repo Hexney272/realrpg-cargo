@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] cargo.lua loaded')
 function trailerSpawn(zones, productId)
 
     local spawnPoint, distance, vehicleCoords, isFree

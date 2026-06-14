@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] cruise_control.lua loaded')
 local LastCCVehicle = nil
 local CurrentCCMetersPerSecond = nil
 local SpeedDiffTolerance = (0.5 / 3.6)

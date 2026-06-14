@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] main.lua loaded')
 --ESX = nil
 ECO = ECO or {}
 ECO.blips = ECO.blips or {}

@@ -3,6 +3,7 @@
     Price calculation, payment logic, and parameter computation
     SIMPLE GLOBAL FUNCTIONS
 ]]
+print("[RealRPG Cargo] calculator.lua loaded")
 
 function calculatePrice(propertyNames, km, product)
     local defender = product.defender

@@ -3,6 +3,7 @@
     Real-time monitoring: speed limits, roll, overturning, collisions
     SIMPLE GLOBAL FUNCTIONS
 ]]
+print("[RealRPG Cargo] monitor.lua loaded")
 
 function speedLimitMonitor(speed)
     if speed > Config.speedLimit[ECO.MONITOR.area] + 5 then

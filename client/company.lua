@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] company.lua loaded')
 --[[
     RealRPG Cargo - Company System (Client-side)
     NUI Callbacks that bridge Vue frontend → Server lib.callbacks

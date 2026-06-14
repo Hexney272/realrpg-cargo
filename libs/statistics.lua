@@ -1,3 +1,4 @@
+print('[RealRPG Cargo] statistics.lua loaded')
 --
 -- Created by IntelliJ IDEA.
 -- User: ekhion
