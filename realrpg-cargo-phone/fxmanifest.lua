@@ -14,9 +14,12 @@ server_scripts {
     'server.lua',
 }
 
-ui_page 'ui/build/index.html'
+-- Invisible NUI page (required for RegisterNUICallback to work)
+-- The actual visible UI runs inside Quasar Smartphone's iframe via cfx-nui URL
+ui_page 'ui/nui.html'
 
 files {
+    'ui/nui.html',
     'ui/build/**/*',
 }
 

@@ -9,7 +9,7 @@ const { bridge, api } = QSPhoneBridge.create({
     targetOrigin: 'https://cfx-nui-qs-smartphone',
 });
 
-const RESOURCE_NAME = 'realrpg-cargo-phone';
+const RESOURCE_NAME = 'realrpg-cargo'; // NUI callbacks are in the main cargo resource
 
 // Money formatter
 const MONEY = new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', minimumFractionDigits: 0, maximumFractionDigits: 0 });
