@@ -412,7 +412,14 @@ function getLiveData()
 
         newRegistration['bodyHealth'] = true
 
-        -- NOTIFY
+        -- Reduce goods quality based on body damage (impact damage)
+        local healthDrop = ECO.CARGO.trailerHealth - bodyHealth
+        if healthDrop > 10 then
+            ECO.CARGO.quality = ECO.CARGO.quality - (healthDrop * 0.05)
+            ECO.MONITOR.ServerSaveRequest = true
+        end
+
+        -- NOTIFY HUD
         sendHudLiveData('trailerHealth', math.round(bodyHealth * 0.1))
     end
 

@@ -85,12 +85,13 @@ function payData(data)
 end
 
 function calculateParams(propertyNames)
+    -- Defaults: ALL cargo is somewhat sensitive (not invulnerable)
     local params = {
-        rollMonitoringSpeed = 1000,
-        overturn = 80,
-        damageRoll = 80,
-        collisionSensitivity = 1000,
-        impactFlash = 1000,
+        rollMonitoringSpeed = 60,        -- Monitor roll above 60 km/h (was 1000 = never)
+        overturn = 70,                   -- Overturn at 70 degrees (was 80)
+        damageRoll = 15,                 -- Roll damage threshold (was 80 = very tolerant)
+        collisionSensitivity = 120,      -- Collision damage at 120 km/h impact (was 1000 = never)
+        impactFlash = 1000,              -- No explosion by default
         illegal = 0,
         marked_on_the_map = 0,
         extraStatDeliveryPoint = 0,
