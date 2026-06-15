@@ -85,13 +85,13 @@ function payData(data)
 end
 
 function calculateParams(propertyNames)
-    -- Defaults: normal cargo is NOT sensitive (original design)
-    -- Only products with special properties (fragile, explosive, etc.) take damage
+    -- Defaults: ALL cargo takes SOME damage (realistic)
+    -- Special properties (fragile, explosive) override with LOWER values = MORE sensitive
     local params = {
-        rollMonitoringSpeed = 1000,      -- No roll monitoring by default
-        overturn = 80,                   -- Overturn at 80 degrees
-        damageRoll = 80,                 -- High tolerance by default
-        collisionSensitivity = 1000,     -- No collision damage by default
+        rollMonitoringSpeed = 70,        -- Roll monitoring above 70 km/h
+        overturn = 75,                   -- Overturn destroys cargo at 75 degrees
+        damageRoll = 20,                 -- Roll damage threshold
+        collisionSensitivity = 100,      -- Collision damage sensitivity (lower = more sensitive)
         impactFlash = 1000,              -- No explosion by default
         illegal = 0,
         marked_on_the_map = 0,
