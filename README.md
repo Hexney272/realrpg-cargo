@@ -1,233 +1,235 @@
-# RealRPG Cargo v2.1.0
+# 🚛 RealRPG Cargo | Advanced Trucking & Company System
 
-Modern cargo delivery system for FiveM (ESX Framework).
+> The most complete cargo delivery and trucking company script for FiveM (ESX).
 
-![ecocargo gallery](https://github.com/Ekhion76/eco_cargo/blob/main/preview_images/eco_cargo_gallery.jpg)
-
-## Demo
-
-[![Watch the video](https://img.youtube.com/vi/Q2TpDI_MPdI/sddefault.jpg)](https://youtu.be/Q2TpDI_MPdI)
-
-[![Convoy video](https://img.youtube.com/vi/8f7a2wVr2HU/sddefault.jpg)](https://youtu.be/8f7a2wVr2HU)
-
-[Screenshots](https://postimg.cc/gallery/hmm2bTb)
+![banner](https://img.shields.io/badge/Framework-ESX%20Legacy-green) ![version](https://img.shields.io/badge/Version-2.3-gold) ![lua](https://img.shields.io/badge/Lua-5.4-blue) ![vue](https://img.shields.io/badge/NUI-Vue%203-42b883)
 
 ---
 
-## Dependencies
+## 🎥 Preview
 
-| Resource | Required | Description |
-|----------|----------|-------------|
-| [es_extended](https://github.com/esx-framework/esx-legacy) | Yes | ESX Legacy framework |
-| [oxmysql](https://github.com/overextended/oxmysql) | Yes | Modern MySQL resource (replaces mysql-async) |
-| [ox_lib](https://github.com/overextended/ox_lib) | Yes | Utility library (callbacks, locales, zones) |
+[![Watch the video](https://img.youtube.com/vi/Q2TpDI_MPdI/maxresdefault.jpg)](https://youtu.be/Q2TpDI_MPdI)
 
 ---
 
-## Features
+## ⭐ Features
 
-### Core Gameplay
-- Cargo delivery missions with 90+ unique products
-- Trailer-based transport with real-time monitoring
-- Dynamic pricing based on distance and cargo properties
-- Cargo theft system (steal other players' trailers)
-- Mission system with faction-based protection/defense mechanics
-- Cruise control (built-in speed limiter)
+### 🚚 Cargo Delivery System
+- **90+ unique products** with different properties (fragile, explosive, toxic, etc.)
+- **Real-time trailer monitoring** – roll detection, collision damage, overturning
+- **Dynamic pricing** – distance-based with property multipliers
+- **Cargo theft** – steal other players' trailers for black money
+- **Mission system** – faction-based protection/defense mechanics
+- **Speed limit enforcement** – city/country zones with HUD alerts
+- **Built-in cruise control** with speed limiter
 
-### Monitoring System
-- Real-time HUD: speed limit, trailer health, goods quality
-- Roll detection, collision monitoring, overturning detection
-- Dynamic damage calculation based on cargo properties
-- Zone-based speed limit enforcement (city/country)
+### 🏢 Trucking Company System
+- **Found your own company** – hire employees, build your fleet
+- **4 employee roles** – Sofőr, Diszpécser, Menedzser, Tulajdonos
+- **Role-based permissions** – hire, fire, manage vehicles, accept contracts
+- **Vehicle fleet management** – buy/sell trucks, track mileage & health
+- **Shared contract system** – competitive! All companies see the same contracts, first to accept wins
+- **Company treasury** – deposit/withdraw, automatic salary payments
+- **Tax system** – configurable tax rate on company income
+- **5 company levels** – progress through reputation and deliveries
+- **Transaction history** – full audit log of all financial operations
 
-### Achievement System (New in v2.1)
-- 11 achievements with automatic unlock detection
-- Golden animated popup notification on achievement earned
-- Persistent storage in database (JSON in `eco_cargo_stats.achievement`)
-- Discord webhook notification on unlock
-- Configurable conditions in `Config.achievements`
+### 📱 Quasar Smartphone V3 Integration
+- **Custom phone app** – manage your company from your phone
+- **Dashboard** – company overview, balance, reputation
+- **Contracts** – browse and accept contracts on the go
+- **Statistics** – delivery history, quality rate
+- **Finance** – deposit/withdraw from company treasury
+- **Push notifications** – real-time alerts for cargo events
 
-### Discord Integration (New in v2.1)
-- Webhook notifications for major events
-- Configurable event types: mission registered, cargo started/delivered/stolen/destroyed
-- Rich embeds with color coding
-- Configure in `Config.discord`
+### 🏆 Achievement System
+- **11 achievements** with automatic detection
+- **Golden animated popup** on unlock
+- **Persistent storage** in database
+- **Discord webhook** notifications
 
-### Statistics & Ranking
-- Per-player delivery statistics (distance, quality, time, success rate)
-- Rank system (Iron -> Platinum) with progression conditions
-- Title system (Newbie -> Divine Champion) based on distance + rank
-- Leaderboard with sorting options
+### 📊 Statistics & Ranking
+- **Per-player stats** – distance, quality, success rate, working time
+- **5 ranks** (Iron → Platinum) with progression conditions
+- **10 titles** (Newbie → Divine Champion)
+- **Leaderboard** with sorting options
 
-### Security
-- Server-side payment calculation (prevents client-side money exploits)
-- SQL injection prevention with column whitelist
-- Server-validated caution money from product database
-- Deprecated insecure client events with warning logs
+### 🔒 Security
+- **Server-side payment calculation** – prevents money exploits
+- **SQL injection prevention** – whitelist validation
+- **pcall error handling** – prevents server crashes
+- **Anti-cheat** – all monetary values validated server-side
+
+### 🔔 Discord Integration
+- Webhook notifications for: mission start, delivery, theft, destruction
+- Company events logging
+- Achievement unlock notifications
 
 ---
 
-## Installation
+## 📋 Requirements
 
-### 1. Database Setup
-Import the SQL file into your database:
+| Resource | Version | Required |
+|----------|---------|----------|
+| [es_extended](https://github.com/esx-framework/esx-legacy) | Legacy | ✅ |
+| [oxmysql](https://github.com/overextended/oxmysql) | Latest | ✅ |
+| [ox_lib](https://github.com/overextended/ox_lib) | Latest | ✅ |
+| [qs-smartphone](https://www.quasar-store.com/smartphone) | V3 | Optional (phone app) |
+
+---
+
+## 🛠️ Installation
+
+### 1. Database
 ```sql
-source eco_cargo.sql
+-- Import main tables
+mysql -u root -p your_database < realrpg_cargo.sql
+
+-- Import company system tables
+mysql -u root -p your_database < realrpg_cargo_company.sql
 ```
 
-### 2. Resource Installation
-1. Place the `realrpg-cargo` folder (rename to `eco_cargo`) in your server's `resources` directory
-2. Add to your `server.cfg`:
+### 2. Resource Setup
 ```cfg
+# server.cfg
 ensure ox_lib
 ensure oxmysql
 ensure es_extended
-ensure eco_cargo
+ensure realrpg-cargo
+
+# Optional: Phone app (requires qs-smartphone V3)
+ensure realrpg-cargo-phone
 ```
 
 ### 3. Configuration
-Edit `config.lua`:
-
-```lua
-Config.Locale = 'hu'  -- 'en' or 'hu'
-
--- Discord Webhook (optional)
-Config.discord = {
-    enabled = true,
-    webhookUrl = 'YOUR_DISCORD_WEBHOOK_URL',
-    -- ...
-}
-
--- Faction lists
-Config.lawEnforcementFactions = { 'police', 'sheriff', ... }
-Config.illegalFactions = { 'vagos', 'ballas', ... }
-```
-
-### 4. Multi-Character Support
-If using a multi-character system (e.g., kashacters):
-
-1. Set `Config.kashacters = true` in config.lua
-2. Ensure your character select script triggers `esx:kashloaded`:
-```lua
-RegisterNetEvent('kashactersC:SpawnCharacter')
-AddEventHandler('kashactersC:SpawnCharacter', function(spawn, isnew)
-    -- Character loading...
-    TriggerEvent('esx:kashloaded')
-end)
-```
+All settings in `config.lua`:
+- Delivery pricing (km fee, base fee, multipliers)
+- Company system (registration fee, levels, roles, salaries, vehicles)
+- Faction lists (defenders, attackers)
+- Achievement conditions
+- Discord webhook
+- Speed limits
+- And much more...
 
 ---
 
-## Commands
+## 💰 Economy (Configurable)
 
-### Player Commands
+| Activity | Earnings |
+|----------|----------|
+| Normal delivery (5km) | ~27.000 Ft |
+| Normal delivery (10km) | ~39.000 Ft |
+| Dangerous cargo (20km) | ~80.000 Ft |
+| **Defender mission (10km)** | **~156.000 Ft** |
+| **Defender mission (20km)** | **~240.000 Ft** |
+| Contract bonus | +20% quality bonus |
+| Stolen cargo | 2.000.000 Ft (high risk) |
+
+### Company costs:
+- Registration: 2.500.000 Ft
+- Trucks: 8.500.000 - 18.500.000 Ft
+- Employee salary: 35.000 - 85.000 Ft/delivery
+
+*All values configurable in config.lua*
+
+---
+
+## 🎮 Commands
+
 | Command | Description |
 |---------|-------------|
-| `/inspect` | Inspect a nearby trailer (on foot, within 10m) |
-| `/mission` | Open mission list (available protection missions) |
-| `/cargostat` | View personal delivery statistics |
-| `/closenui` | Force close NUI interface |
-
-### Admin Commands
-| Command | Description |
-|---------|-------------|
-| `/cargodiag` | Database diagnostics & maintenance panel (admin/superadmin only) |
-
-### Cruise Control (Built-in)
-| Key | Action |
-|-----|--------|
-| Numpad `+` / Scroll Up | Increase speed by 10 km/h |
-| Numpad `-` / Scroll Down | Decrease speed by 10 km/h |
-| Brake / Handbrake | Disable cruise control |
-
-> Enable cruise control in config: `Config.enableSpeedControl = true`
+| `/inspect` | Inspect a nearby trailer |
+| `/mission` | Open mission list |
+| `/cargostat` | View statistics |
+| `/company` | Open company panel |
+| `/gencontracts` | Generate contracts (admin) |
+| `/cargodiag` | Database diagnostics (admin) |
 
 ---
 
-## Technical Architecture
+## 🏗️ Technical Details
 
-### File Structure
-```
-eco_cargo/
-├── client/
-│   ├── main.lua            -- Client initialization, zone handling, NUI
-│   ├── monitoring.lua      -- Real-time cargo monitoring threads
-│   └── cruise_control.lua  -- Speed limiter system
-├── server/
-│   ├── main.lua            -- Server callbacks, events, payment logic
-│   ├── discord.lua         -- Discord webhook module
-│   └── achievements.lua    -- Achievement check & award system
-├── libs/
-│   ├── helper.lua          -- Shared utilities (ECO.Utils namespace)
-│   ├── calculator.lua      -- Price & payment calculation (ECO.Calc)
-│   ├── cargo.lua           -- Cargo state management
-│   ├── hud.lua             -- HUD communication (ECO.Hud)
-│   ├── monitor.lua         -- Monitoring functions (ECO.MonitorFn)
-│   ├── mission.lua         -- Mission UI callbacks
-│   ├── statistics.lua      -- Statistics page logic
-│   ├── maintenance.lua     -- Admin diagnostics
-│   ├── coords.lua          -- Coordinate utilities
-│   └── distance.lua        -- Distance calculation
-├── html/
-│   ├── ui.html             -- NUI page (no jQuery)
-│   ├── styles.css          -- Stylesheet + achievement popup
-│   └── js/
-│       ├── app.js          -- Main NUI logic (vanilla JS)
-│       ├── helper.js       -- JS utilities, nuiPost(), formatStr()
-│       └── hud.js          -- HUD rendering & notifications
-├── locales/
-│   ├── en.lua / en.json    -- English translations
-│   └── hu.lua / hu.json    -- Hungarian translations
-├── config.lua              -- All configuration
-├── fxmanifest.lua          -- Resource manifest
-└── eco_cargo.sql           -- Database schema + sample data
-```
+### Stack
+- **Lua 5.4** – modern syntax, better performance
+- **Vue 3 + Vite** – premium NUI with glassmorphism design
+- **ox_lib** – callbacks, server communication
+- **oxmysql** – async database with prepared statements
+- **Quasar Bridge** – phone app iframe integration
 
-### Technology Stack
-- **Lua 5.4** enabled (`lua54 'yes'`)
-- **ox_lib** – `lib.callback` for client-server communication
-- **oxmysql** – `MySQL.query.await` / `MySQL.update` for database
-- **Vanilla JS** – No jQuery dependency in NUI
-- **Namespaced modules** – `ECO.Calc`, `ECO.Hud`, `ECO.Utils`, `ECO.MonitorFn`
+### Performance
+- Dynamic monitoring frequency (idle: 100ms, speed: every frame)
+- Squared distance calculations (no sqrt overhead)
+- Server-side product caching
+- Optimized zone proximity checks
 
-### Performance Optimizations
-- Dynamic monitoring frequency based on vehicle speed (100ms idle → 0ms at speed)
-- Squared distance comparison (no sqrt) for zone proximity checks
-- Separated DrawMarker rendering from game logic
-- Efficient cruise control with state-based Wait times
-- Server-side product caching (loaded once from DB)
+### Database Tables
+- `realrpg_cargo_products` – 94 products
+- `realrpg_cargo_zones` – 80+ delivery zones
+- `realrpg_cargo_distances` – pre-calculated routes
+- `realrpg_cargo_stats` – player statistics + achievements
+- `realrpg_cargo_companies` – trucking companies
+- `realrpg_cargo_employees` – company members
+- `realrpg_cargo_vehicles` – company fleet
+- `realrpg_cargo_contracts` – shared competitive contracts
+- `realrpg_cargo_transactions` – financial audit log
+- `realrpg_cargo_invites` – employee invitations
 
 ---
 
-## Changelog
+## 🌐 Localization
 
-### v2.1.0 (2025)
-- **NUI**: Complete rewrite from jQuery to vanilla JavaScript
-- **Discord**: Webhook integration for cargo events
-- **Achievements**: 11 achievements with auto-detection and golden popup
-- **Performance**: Squared distance, dynamic wait optimization, cruise control refactor
-
-### v2.0.0 (2025)
-- **Security**: Server-side payment, SQL injection prevention
-- **Database**: mysql-async → oxmysql migration
-- **Framework**: ox_lib integration (lib.callback replaces ESX callbacks)
-- **Code**: Namespaced modules with LuaDoc annotations
-- **Locale**: JSON locale files for ox_lib compatibility
-- **FXManifest**: Lua 5.4, explicit script loading, proper dependencies
-
-### v1.0.0 (2021)
-- Original release by Tutya & Ekhion
+- 🇭🇺 Hungarian (full)
+- 🇬🇧 English (full)
+- Easy to add new languages (JSON + Lua locale files)
 
 ---
 
-## Credits
+## 📸 Screenshots
 
-- Original authors: **Tutya & Ekhion** (2020-2021)
-- Modernization: Kiro AI (2025)
-- Cruise Control based on: [teb_speed_control](https://github.com/hojgr/teb_speed_control)
+*Company Dashboard • Contract System • Real-time HUD • Achievement Popup • Phone App*
 
 ---
 
-## License
+## 📝 Changelog
 
-This project is provided as-is for educational and community use.
+### v2.3 (Latest)
+- Trucking Company System (5 levels, roles, vehicles, contracts)
+- Shared competitive contracts (first come, first served)
+- Quasar Smartphone V3 integration
+- Achievement system (11 achievements)
+- Discord webhooks
+- Premium glassmorphism UI (Vue 3)
+- ESX + ox_inventory compatible money system
+- Realistic Hungarian economy (Ft)
+
+### v2.0
+- ox_lib integration (lib.callback)
+- oxmysql migration
+- Server-side payment security
+- Performance optimizations
+- Lua 5.4 support
+
+### v1.0
+- Original cargo delivery system
+- 94 products, 80+ zones
+- Mission/defense system
+- Statistics & ranking
+
+---
+
+## 🤝 Support
+
+- Discord: [Your Discord Link]
+- Documentation: Included in package
+- Updates: Free lifetime updates
+
+---
+
+## 📄 License
+
+This script is sold as-is. Redistribution or resale is prohibited.
+One purchase = one server license.
+
+---
+
+*Made with ❤️ for the FiveM community*
