@@ -784,6 +784,37 @@ end
 -- ADMIN COMMANDS
 -- ============================================================
 
+-- Teszt command: XP adás teszteléshez
+-- Használat: /testxp [mennyiség]  (alapértelmezett: 100)
+RegisterCommand("testxp", function(source, args)
+    local src = source
+    if src == 0 then return end -- konzolból ne
+
+    local amount = tonumber(args[1]) or 100
+
+    if GetResourceState('realcity-leveling') == 'started' then
+        local ok, result = pcall(function()
+            return exports['realcity-leveling']:AddXP(src, amount, 'test_command')
+        end)
+        if ok then
+            TriggerClientEvent('chat:addMessage', src, {
+                color = { 61, 220, 132 },
+                args = { 'RealRPG', 'Teszt XP adva: +' .. amount .. ' XP' }
+            })
+        else
+            TriggerClientEvent('chat:addMessage', src, {
+                color = { 255, 93, 93 },
+                args = { 'RealRPG', 'Hiba: realcity-leveling export nem elérhető' }
+            })
+        end
+    else
+        TriggerClientEvent('chat:addMessage', src, {
+            color = { 255, 93, 93 },
+            args = { 'RealRPG', 'A realcity-leveling resource nincs elindítva!' }
+        })
+    end
+end, false)
+
 RegisterCommand("cargodiag", function(source)
 
     local xPlayer = ESX.GetPlayerFromId(source)
