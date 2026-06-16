@@ -548,6 +548,14 @@ RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
 
     -- Pay the player
     if amount > 0 then
+        -- LEVELING: Szint-alapú fizetés szorzó alkalmazása
+        if GetResourceState('realcity-leveling') == 'started' then
+            local ok, scaled = pcall(function()
+                return exports['realcity-leveling']:ScalePay(_source, amount)
+            end)
+            if ok and scaled then amount = scaled end
+        end
+
         if moneyType == 'black_money' then
             xPlayer.addAccountMoney('black_money', amount)
         else
@@ -559,6 +567,19 @@ RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
             type = 'money',
             text = _('add_money', amount, _(moneyType))
         })
+    end
+
+    -- LEVELING: XP adás sikeres szállítás után
+    if not stolen and state ~= 'DESTROYED' then
+        if GetResourceState('realcity-leveling') == 'started' then
+            pcall(function()
+                -- Alap XP: 50, + km alapú bónusz (max 150 XP összesen)
+                local baseXp = 50
+                local kmBonus = math.min(100, math.floor((ecoCargo.km or 0) * 5))
+                local totalXp = baseXp + kmBonus
+                exports['realcity-leveling']:AddXP(_source, totalXp, 'cargo_delivery')
+            end)
+        end
     end
 
     -- Pay society
