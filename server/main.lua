@@ -548,10 +548,10 @@ RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
 
     -- Pay the player
     if amount > 0 then
-        -- LEVELING: Szint-alapú fizetés szorzó alkalmazása
+        -- LEVELING: Kamionos kategória szorzó alkalmazása
         if GetResourceState('realcity-leveling') == 'started' then
             local ok, scaled = pcall(function()
-                return exports['realcity-leveling']:ScalePay(_source, amount)
+                return exports['realcity-leveling']:ScaleCategoryPay(_source, 'trucker', amount)
             end)
             if ok and scaled then amount = scaled end
         end
@@ -569,15 +569,19 @@ RegisterNetEvent('realrpg_cargo:deliverCargo', function(plate)
         })
     end
 
-    -- LEVELING: XP adás sikeres szállítás után
+    -- LEVELING: Kamionos kategória XP adás sikeres szállítás után
     if not stolen and state ~= 'DESTROYED' then
         if GetResourceState('realcity-leveling') == 'started' then
             pcall(function()
-                -- Alap XP: 50, + km alapú bónusz (max 150 XP összesen)
-                local baseXp = 50
-                local kmBonus = math.min(100, math.floor((ecoCargo.km or 0) * 5))
-                local totalXp = baseXp + kmBonus
-                exports['realcity-leveling']:AddXP(_source, totalXp, 'cargo_delivery')
+                -- Kamionos kategória XP: alap 40 + km bónusz (max 120 összesen)
+                local baseXp = 40
+                local kmBonus = math.min(80, math.floor((ecoCargo.km or 0) * 4))
+                local totalCatXp = baseXp + kmBonus
+                exports['realcity-leveling']:AddCategoryXP(_source, 'trucker', totalCatXp, 'cargo_delivery')
+                -- Globális XP (kisebb)
+                exports['realcity-leveling']:AddXP(_source, math.floor(totalCatXp * 0.3), 'cargo_delivery')
+                -- Vezetés képesség XP
+                exports['realcity-leveling']:AddSkillXP(_source, 'driving', 3)
             end)
         end
     end
